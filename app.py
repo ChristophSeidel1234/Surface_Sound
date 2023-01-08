@@ -1,10 +1,14 @@
 import streamlit as st 
 from initial_conditions import provide_initial_condition
 import make_sound as ms
+import os
+import pathlib
 
 
 
-
+cwd = os.getcwd() 
+print('Hallo000000000000000')
+print(cwd)
 
 #MS.write_sound_to_file(0.05, 60, initial_func='sawtooth', pick_or_beat='pick')
 
@@ -37,8 +41,19 @@ print(c)
 
 MS.write_sound_to_file(c, number_of_eigen_frequencies, initial_func='sawtooth', pick_or_beat='pick')
 
+# Get the current user's home directory
+home = os.path.expanduser("~")
 
-audio_file = open('/Users/seidel/Desktop/repos/gaussian-ginger-student-code/surface_synth/synt_python/new_signal.wav', 'rb')
+# Set the path to the desktop
+desktop = os.path.join(home, "Desktop")
+
+# Set the full path to the file
+filename = os.path.join(desktop, "new_signal.wav")
+
+if not os.path.exists(filename):
+    os.mknod(filename)
+audio_file = open(filename, 'rb')
+
 audio_bytes = audio_file.read()
 
 st.audio(audio_bytes, format='../audio/wav')

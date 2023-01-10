@@ -1,4 +1,5 @@
 import streamlit as st 
+st.write(st.__version__)
 from initial_conditions import provide_initial_condition
 import make_sound as ms
 import os

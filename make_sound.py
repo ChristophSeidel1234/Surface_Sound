@@ -101,10 +101,10 @@ class Make_Sound:
             X = self.set_pick_matrix(initial_index, number_of_eigenvalues)
         else:
             X = self.set_beat_matrix(initial_index, c, number_of_eigenvalues)
-        print('initial = ' + str(initial_condition))
-        print('X = ' + str(X))
+        #print('initial = ' + str(initial_condition))
+        #print('X = ' + str(X))
         a = np.linalg.solve(X, initial_condition)
-        print('a = ' + str(a))
+        #print('a = ' + str(a))
         return a, initial_index
 
     
@@ -143,8 +143,8 @@ class Make_Sound:
         i_f = initial_func
         p_o_b = pick_or_beat
         a, initial_index = self.determine_coefficients(EVs, evs, P, Start_P, c, number_of_eigenvalues, initial_func=i_f, pick_or_beat=p_o_b)
-        print('initial idx = ' + str(initial_index))
-        print('first eigenvalue = ' + str(evs[1]))
+        #print('initial idx = ' + str(initial_index))
+        #print('first eigenvalue = ' + str(evs[1]))
         #f = self.sound(a, evs, EVs, c, initial_index, number_of_eigenvalues, pick_or_beat)
         if pick_or_beat == 'pick':
             f = self.sound_single_vertex_pick(a, evs, EVs, c, 0, number_of_eigenvalues)
@@ -164,7 +164,7 @@ class Make_Sound:
 
         open(filename, 'w').close()
         wave.write(filename)
-        print('new signal written')
+        #print('new signal written')
     
     
 if __name__ == "__main__":

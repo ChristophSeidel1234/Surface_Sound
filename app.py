@@ -1,5 +1,5 @@
 import streamlit as st 
-st.write(st.__version__)
+#st.write(st.__version__)
 from initial_conditions import provide_initial_condition
 import make_sound as ms
 import os
@@ -25,16 +25,16 @@ surface = st.selectbox('Select Surface', ['Power Ellipsoid', 'Minor Ellipsoid','
 MS = ms.Make_Sound(surface)
 
 number_of_eigen_frequencies = st.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef')
-print(number_of_eigen_frequencies)
+#print(number_of_eigen_frequencies)
 
 waveform = st.selectbox('Select Waveform', ['sawtooth', 'cone', 'rectangle', 'cylinder'], key='wave_box', on_change=sound_to_file)
-print(waveform)
+#print(waveform)
 p_o_b = st.radio('Pick or Beat', ['pick', 'beat'], key='pick_or_beat')
-print(p_o_b)
+#print(p_o_b)
 
 #st.image('/Users/seidel/Desktop/repos/gaussian-ginger-student-code/surface_synth/synt_python/duck.png')
 c = st.slider('Propagation Velocity', 0.0, 0.6,step=0.01, value=0.1, key='c_slider', on_change=sound_to_file)
-print(c)
+#print(c)
 
 MS.write_sound_to_file(c, number_of_eigen_frequencies, initial_func='sawtooth', pick_or_beat='pick')
 

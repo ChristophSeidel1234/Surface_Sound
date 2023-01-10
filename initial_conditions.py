@@ -62,7 +62,7 @@ def provide_initial_condition(P, Start_P, hight, number_of_eigenvalues, initial_
     index_dict = dict(zip(dist_list,index))
     dist_dict = dict(zip(index,dist_list))
     num_sawtooth = int(number_of_eigenvalues / 2)
-    print('num_sawtoot = '+str(num_sawtooth))
+    #print('num_sawtoot = '+str(num_sawtooth))
     sorted_dist_selection = sorted_dist[0:num_sawtooth]
     used_index = calculate_used_index(sorted_dist_selection, index_dict)
 

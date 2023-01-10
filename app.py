@@ -2,13 +2,9 @@ import streamlit as st
 from initial_conditions import provide_initial_condition
 import make_sound as ms
 import os
-import pathlib
 
 
 
-cwd = os.getcwd() 
-print('Hallo000000000000000')
-print(cwd)
 
 #MS.write_sound_to_file(0.05, 60, initial_func='sawtooth', pick_or_beat='pick')
 

@@ -4,41 +4,57 @@ from initial_conditions import provide_initial_condition
 from thinkdsp import CosSignal, SinSignal
 from scipy import linalg
 import time
-import pathlib
 import os
 
-# hallo
+
 class Make_Sound:
     def __init__(self, surface):
 
-        cwd = os.getcwd() 
-        print('Hallo')
-        print(cwd)
+        dir_path = os.path.dirname(os.path.abspath(__file__))
 
         if surface == 'Minor Ellipsoid':
-            eigenvalues = pd.read_csv('../data/minor_ellipsoid/eigenvalues.csv',header=None)
+            path = os.path.join(dir_path, 'data/minor_ellipsoid/eigenvalues.csv')
+            eigenvalues = pd.read_csv(path,header=None)
             #eigenvalues = eigenvalues.to_numpy()[1:]
-            eigenvectors = pd.read_csv('../data/minor_ellipsoid/eigenvectors.csv',header=None)
+            path = os.path.join(dir_path, 'data/minor_ellipsoid/eigenvectors.csv')
+            eigenvectors = pd.read_csv(path,header=None)
             # load surface coordinate
-            Px = pd.read_csv('../data/minor_ellipsoid/Px.csv',header=None)
-            Py = pd.read_csv('../data/minor_ellipsoid/Py.csv',header=None)
-            Pz = pd.read_csv('../data/minor_ellipsoid/Pz.csv',header=None)
+            path = os.path.join(dir_path, 'data/minor_ellipsoid/Px.csv')
+            Px = pd.read_csv(path,header=None)
+            path = os.path.join(dir_path, 'data/minor_ellipsoid/Py.csv')
+            Py = pd.read_csv(path,header=None)
+            path = os.path.join(dir_path, 'data/minor_ellipsoid/Pz.csv')
+            Pz = pd.read_csv(path,header=None)
+            
 
         elif surface == 'Major Ellipsoid':
-            eigenvalues = pd.read_csv('../data/major_ellipsoid/eigenvalues.csv',header=None)
-            eigenvectors = pd.read_csv('../data/major_ellipsoid/eigenvectors.csv',header=None)
+            path = os.path.join(dir_path, 'data/major_ellipsoid/eigenvalues.csv')
+            eigenvalues = pd.read_csv(path,header=None)
+            #eigenvalues = eigenvalues.to_numpy()[1:]
+            path = os.path.join(dir_path, 'data/major_ellipsoid/eigenvectors.csv')
+            eigenvectors = pd.read_csv(path,header=None)
             # load surface coordinate
-            Px = pd.read_csv('../data/major_ellipsoid/Px.csv',header=None)
-            Py = pd.read_csv('../data/major_ellipsoid/Py.csv',header=None)
-            Pz = pd.read_csv('../data/major_ellipsoid/Pz.csv',header=None)
+            path = os.path.join(dir_path, 'data/major_ellipsoid/Px.csv')
+            Px = pd.read_csv(path,header=None)
+            path = os.path.join(dir_path, 'data/major_ellipsoid/Py.csv')
+            Py = pd.read_csv(path,header=None)
+            path = os.path.join(dir_path, 'data/major_ellipsoid/Pz.csv')
+            Pz = pd.read_csv(path,header=None)
+            
 
         elif surface == 'Power Ellipsoid':
-            eigenvalues = pd.read_csv('/Users/seidel/Desktop/repos/Surface_Sound/data/power_ellipsoid/eigenvalues.csv',header=None)
-            eigenvectors = pd.read_csv('/Users/seidel/Desktop/repos/Surface_Sound/data/power_ellipsoid/eigenvectors.csv',header=None)
+            path = os.path.join(dir_path, 'data/power_ellipsoid/eigenvalues.csv')
+            eigenvalues = pd.read_csv(path,header=None)
+            #eigenvalues = eigenvalues.to_numpy()[1:]
+            path = os.path.join(dir_path, 'data/power_ellipsoid/eigenvectors.csv')
+            eigenvectors = pd.read_csv(path,header=None)
             # load surface coordinate
-            Px = pd.read_csv('/Users/seidel/Desktop/repos/Surface_Sound/data/power_ellipsoid/Px.csv',header=None)
-            Py = pd.read_csv('/Users/seidel/Desktop/repos/Surface_Sound/data/power_ellipsoid/Py.csv',header=None)
-            Pz = pd.read_csv('/Users/seidel/Desktop/repos/Surface_Sound/data/power_ellipsoid/Pz.csv',header=None)
+            path = os.path.join(dir_path, 'data/power_ellipsoid/Px.csv')
+            Px = pd.read_csv(path,header=None)
+            path = os.path.join(dir_path, 'data/power_ellipsoid/Py.csv')
+            Py = pd.read_csv(path,header=None)
+            path = os.path.join(dir_path, 'data/power_ellipsoid/Pz.csv')
+            Pz = pd.read_csv(path,header=None)
             
 
         self.evs = eigenvalues.to_numpy().flatten()[1:]

@@ -3,3 +3,4 @@ os
 numpy==1.22.3
 pandas==1.4.2
 scipy==1.7.3
+

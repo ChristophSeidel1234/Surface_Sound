@@ -62,7 +62,7 @@ def provide_initial_condition(P, Start_P, hight, number_of_eigenvalues, initial_
     index_dict = dict(zip(dist_list,index))
     dist_dict = dict(zip(index,dist_list))
     num_sawtooth = int(number_of_eigenvalues / 2)
-    print('num_sawtoot = '+str(num_sawtooth))
+    #print('num_sawtoot = '+str(num_sawtooth))
     sorted_dist_selection = sorted_dist[0:num_sawtooth]
     used_index = calculate_used_index(sorted_dist_selection, index_dict)
 
@@ -72,7 +72,7 @@ def provide_initial_condition(P, Start_P, hight, number_of_eigenvalues, initial_
     #np.random.seed(10)
     rest_choice = np.random.choice(rest_index,size=number_of_eigenvalues - num_sawtooth)
 
-    # calculate sawtooth initial condition
+    # calculate a choosen initial condition
     if initial_func is None:
         initial_condition = cone_func(n, hight, sorted_dist_selection, used_index, dist_dict)
     elif initial_func == 'sawtooth':
@@ -82,7 +82,7 @@ def provide_initial_condition(P, Start_P, hight, number_of_eigenvalues, initial_
     elif initial_func == 'cylinder':
         initial_condition = rectangle_cylinder_func(n, hight, sorted_dist_selection, used_index)
     elif initial_func == 'cone':
-        initial_condition = cone_func(n, hight, sorted_dist_selection, used_index)
+        initial_condition = cone_func(n, hight, sorted_dist_selection, used_index, dist_dict)
 
 
     # add the choosen vetices from the resr of the surface

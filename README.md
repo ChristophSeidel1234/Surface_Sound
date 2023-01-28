@@ -22,9 +22,9 @@ We go step by step from top to bottom through the app.
 * **Select Surface**\
 I have chosen the shape of the surfaces (i.e. tuned them) so that the fundamental tone together with the first overtones form a major, minor or power cord.
 <div style="display: flex;">
-  <img src="images/major" width="33.33%" alt="image1">
-  <img src="images/minor" width="33.33%" alt="image2">
-  <img src="images/power" width="33.33%" alt="image3">
+  <img src="images/major.jpg" width="33.33%" alt="major">
+  <img src="images/minor.jpg" width="33.33%" alt="minor">
+  <img src="images/power.jpg" width="33.33%" alt="power">
 </div>
 
 

@@ -19,7 +19,9 @@ class Rectangle_Function:
         self.domain = domain
         vfunc = np.vectorize(rectangle)
         self.rectangle = vfunc(domain, x, y, p)
-      
+
+    def to_string(self):
+        return f"Rectangle_Function\n={self.rectangle}"
 
     
 
@@ -41,57 +43,75 @@ class Global_Function:
 
     def to_string(self):
         return f"Global_Function\nx_spec={self.x_spec}\ny_spec={self.y_spec}\n" \
-               f"max_spec={self.max_spec}\nmax_idx={self.max_idx}\nx_value={self.x_value}"#\nfunc={self.func})"
+               f"max_spec={self.max_spec}\nmax_idx={self.max_idx}\nx_value={self.x_value}\nfunc={self.func})"
 
     def split_at_max_value(self):
-        left_None = 0
-        right_None = 0
         left_gf = None
         right_gf = None
-        if self.max_idx == 0:
-            left_None = 1
+
+        if self.max_idx != 0:
             print(' ')
-            print('left None')
-        elif self.max_idx == self.x_spec.size-1:
+            print('left')
+            left_x_spec = self.x_spec[:self.max_idx]
+            #print("left_x_spec " + str(left_x_spec))
+            left_y_spec = self.y_spec[:self.max_idx]
+            left_domain = self.domain <= self.x_value - self.p
+            
+            left_domain = self.domain[left_domain]
+            left_gf = Global_Function(self.p,left_x_spec,left_y_spec,left_domain)
+            print(left_gf.to_string())
+        if self.max_idx != self.x_spec.size-1:
             print(' ')
-            print('right None')
-            right_None = 1
-        else:
-            if left_None == 0:
-                print(' ')
-                print('left')
-                left_x_spec = self.x_spec[:self.max_idx]
-                left_y_spec = self.y_spec[:self.max_idx]
-                left_domain = self.domain < self.x_value - self.p
-                left_domain = self.domain[left_domain]
-                left_gf = Global_Function(self.p,left_x_spec,left_y_spec,left_domain)
-            if right_None == 0:
-                print(' ')
-                print('right')
-                right_x_spec = self.x_spec[self.max_idx+1:]
-                right_y_spec = self.y_spec[self.max_idx+1:]
-                right_domain = self.domain > self.x_value + self.p
-                right_domain = self.domain[right_domain]
-                right_gf = Global_Function(self.p,right_x_spec,right_y_spec,right_domain)
+            print('right')
+            #print(self.to_string())
+            #print('self.max_idx = '+str(self.max_idx))
+            #print('self.x_spec.size-1 = '+str(self.x_spec.size))
+            #print("parent spec " + str(x_spec))
+            right_x_spec = self.x_spec[self.max_idx+1:]
+            #print("right_x_spec " + str(right_x_spec))
+            right_y_spec = self.y_spec[self.max_idx+1:]
+            right_domain = self.domain > self.x_value + self.p
+            right_domain = self.domain[right_domain]
+            right_gf = Global_Function(self.p,right_x_spec,right_y_spec,right_domain)
+            print(right_gf.to_string())
             
         return left_gf, right_gf
 
 
+    def add_function(self, other):
+        func = self.func
+        other_func = other.func
+        other_domain = other.domain
+        func[other_domain] = other_func
+        self.func = func
+
+
+
+
+
+
 def set_global_function(gf):
     if gf is not None:
-        print("I am here ")
         
-        print(gf.to_string())
         func = Rectangle_Function(gf.p, gf.x_value, gf.max_spec, gf.domain)
+        print(func.to_string())
+        gf.func = func.rectangle
         left_gf, right_gf = gf.split_at_max_value()
         
+
         set_global_function(left_gf)
         set_global_function(right_gf)
+        if left_gf is not None:
+            gf.add_function(left_gf)
+        if right_gf is not None:
+            gf.add_function(right_gf)
+
+        #return func
                 
 
 
   #### TEST
-p = 3.
+p = 10.
 x_spec = np.array([9.,12.,50.,66.])
 y_spec = np.array([10.,34.,50.,30.])
 domain = np.arange(99)
@@ -103,6 +123,8 @@ left_gf, right_gf = gf.split_at_max_value()
 #print(right_gf.to_string())
 count = 11
 set_global_function(gf)
+print(" ")
+print(gf.to_string())
 
     
         

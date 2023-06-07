@@ -1,5 +1,11 @@
 import numpy as np 
 import math
+import scipy.signal
+import matplotlib.pyplot as plt
+import thinkdsp as dsp
+from thinkdsp import SinSignal, CosSignal
+
+
 
 
 def rectangle(t,x_spec,y_spec,p):
@@ -20,8 +26,18 @@ def rectangle(t,x_spec,y_spec,p):
     else:
         return y_spec
 
-class Rectangle_Function:
+def make_y_spectrum(x_spec, y_spec, domain):
+    indices = np.abs(domain - x_spec[:, None]).argmin(axis=1)
+    image = np.zeros(len(domain))
+    image[indices] = y_spec
+    return image
 
+def make_spectrum(x_spec, y_spec, domain,framerate):
+        image = make_y_spectrum(x_spec, y_spec, domain)
+        Spectrum = dsp.Spectrum(image,domain,framerate)
+        return Spectrum
+
+class Rectangle_Function:
 
     def __init__(self, p, x, y,domain):
         self.p = p
@@ -61,6 +77,8 @@ class Global_Function:
         return f"Global_Function\nx_spec={self.x_spec}\ny_spec={self.y_spec}\n" \
                f"max_spec={self.max_spec}\nmax_idx={self.max_idx}\nx_value={self.x_value}\nfunc={self.func})"
 
+
+
     def split_at_max_value(self):
         left_gf = None
         right_gf = None
@@ -88,10 +106,12 @@ class Global_Function:
         other_domain = other.domain
         
         if other_domain.size > 0 and self.domain.size > 0:
-            first_idx = self.domain[0]
-            shifted_other_domain = other_domain -first_idx
-            func[shifted_other_domain] = other_func
+            step_size = self.domain[1] - self.domain[0]  # Assuming equidistant step size in domain
+            indices = np.round((other_domain - self.domain[0]) / step_size).astype(int)
+            func[indices] = other_func
         self.func = func
+
+
 
 
 
@@ -110,11 +130,55 @@ def set_global_function(gf):
         if right_gf is not None:
             gf.add_function(right_gf)
 
-                
 
+
+def smooth_func(rectangle_func, p, length):
+    """
+    Smoothing a rectangle function with an appropriate mollifier. 
+    Due to the convolution theorem the convolution itself can be computed by
+    conv(f*g) = F^(-1)(F(f)*F(g))
+    where F denotes the Fourier transform
+    and F^(-1) its inverse
+    """
+    max_fun = np.amax(rectangle_func)
+    fft_rectangle_func = np.fft.fft(rectangle_func)
+    gaussian = scipy.signal.gaussian(M=length, std=p)
+    # normalize
+    gaussian /= sum(gaussian)
+    fft_gaussian = np.fft.fft(gaussian)
+    convolution = np.fft.ifft(fft_rectangle_func * fft_gaussian)
+    convolution = np.roll(convolution,int(length/2))
+    max_conv = np.amax(convolution)
+    # scale the convolution such that its maximum equals the maximum of the spectrum
+    convolution = convolution * max_fun / max_conv
+    return convolution
+
+
+def test_make_spectrum():
+    domain = np.arange(0.,1.,0.1)
+    x_spec = np.array([0.18243, 0.6123456])
+    y_spec = np.array([3.4,8.])
+    framerate = 3
+    Spectrum = make_spectrum(x_spec,y_spec,domain,framerate)
+    print(Spectrum.hs)
+
+test_make_spectrum()
   #### TEST
 
+def test_make_y_spectrum():
+    domain = np.arange(0.,1.,0.1)
+    #print(domain)
+    x_spec = np.array([0.18243, 0.6123456])
+    y_spec = np.array([3.4,8.])
+    #print(make_spectrum(x_spec,y_spec,domain))
+    result = make_y_spectrum(x_spec,y_spec,domain)
+    expected_result = np.array([0.,0.,3.4,0.,0.,0.,8.,0.,0.,0.])
+    assert np.allclose(result, expected_result), "test_make_y_spectrum() do not match the expected values."
+
+test_make_y_spectrum()
+
 def test_Rectangle_Function():
+    
     p = 2.
     x = 6.
     y = 4.
@@ -133,8 +197,21 @@ def test_Rectangle_Function():
 
 test_Rectangle_Function()
 
+def test_Rectangle_Funktion_1():
+    p = 0.3
+    x = 0.9
+    y = 3.8
+    domain = np.arange(0.,2.,0.1)
+    #print(domain)
+    rf = Rectangle_Function(p,x,y,domain)
+    result = rf.rectangle
+    #print(result)
+
+test_Rectangle_Funktion_1()
+
 
 def test_Global_Function():
+    #print("test_Global_Function()")
     p = 2.
     x_spec = np.array([1.,4.,7.,9.])
     y_spec = np.array([1.,8.,7.,10.])
@@ -154,5 +231,41 @@ def test_Global_Function():
 test_Global_Function()
 
 
-    
+
+
+arr_1 = np.arange(0.1, 100., 0.25)
+arr_2 = np.array([2., 6., 12.,13.])
+
+indices = np.abs(arr_1 - arr_2[:, None]).argmin(axis=1)
+##print(arr_1)
+#print(indices)
+point = 6.
+index = np.abs(arr_1 - point).argmin()
+#print(index)
+
+#from scipy.fft import fft, fftfreq, fftshift
         
+sig_1 = CosSignal(freq=10000, amp=2., offset=0)
+sig_2 = SinSignal(freq=5000, amp=1., offset=0)
+sig_3 = SinSignal(freq=3000, amp=3., offset=0)
+sig = sig_1 + sig_2 + sig_3
+wave = sig.make_wave(duration=10.5, start=0, framerate=44100)
+wave.normalize()
+y = wave.ys 
+x = wave.ts
+spectrum = wave.make_spectrum(full=True)
+y = np.fft.fft(y)
+#y = spectrum.hs
+y = np.abs(y)
+n =len(y)
+d = 1 / wave.framerate
+#y = spectrum.hs
+x = np.fft.fftfreq(n,d)
+x = spectrum.fs
+
+
+
+#fig, ax = plt.subplots()
+#ax.plot(x,y)
+#plt.show()
+

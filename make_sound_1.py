@@ -220,16 +220,11 @@ class Make_Sound:
         i_f = initial_func
         p_o_b = pick_or_beat
         n = 3
-        #
         # load initial conditions
         initial_condition = self.set_initial_function(n, peak_range, initial_func)
-        
-        #X = np.zeros([2,2])
         c = propagation_velocity
         w = evs
-
         X = self.set_matrix(c)
-        print(f'X = {X.shape}')
         a = np.linalg.solve(X, initial_condition)
         return a
 
@@ -242,35 +237,55 @@ class Make_Sound:
         for i in range(number_of_eigenvalues):
             x_spec[i] = c*w[i]
             y_spec[i] = abs(a[i]*EVs[j][i])
-        #print(x_spec)
         return x_spec, y_spec
+
+
+    def y_spec_ij(self, i, j, a, c):
+        EVs = self.S.EVs
+        return abs(a[i]*EVs[j][i])
+
+
+    def get_y_spec_single_vertex(self, j, a, c, number_of_eigenvalues):
+        EVs = self.S.EVs
+        y_spec = np.zeros(number_of_eigenvalues)
+
+        i_range = np.arange(number_of_eigenvalues)
+        vfunc = np.vectorize(self.y_spec_ij,otypes=[np.ndarray], signature="(m),(),(n),() -> (m)")
+        y_spec = vfunc(i_range, j, a, c)
+        #y_spec = np.abs(y_spec)
+        #for i in range(number_of_eigenvalues):
+        #    y_spec[i] = abs(a[i]*EVs[j][i])
+        return y_spec
+
+    def get_x_spec(self, c, number_of_eigenvalues):
+        w = self.S.evs
+        x_spec = np.zeros(number_of_eigenvalues)
+        for i in range(number_of_eigenvalues):
+            x_spec[i] = c*w[i]
+        return x_spec 
 
     def get_spectrum(self, c, peak_range, number_of_eigenvalues, initial_func, pick_or_beat):
         S = self.S
         EVs = S.EVs 
         evs = S.evs
-        print(f'P.shape = {S.P.shape[0]}')
         initial_index = S.initial_idxs
-        #P = self.P
-        #Start_P = P[0]
         i_f = initial_func
         p_o_b = pick_or_beat
         x_spec = np.zeros(number_of_eigenvalues)
         y_spec = np.zeros(number_of_eigenvalues)
         n = 3
         a = self.determine_coefficients(peak_range, c, i_f, p_o_b)
-        print(f'initial function = {initial_func}')
-        for i in range(S.P.shape[0]):
-        #for i in initial_index:
-            #print("")
-            x_spec_single, y_spec_single = self.get_spectrum_single_vertex(a, c, i, number_of_eigenvalues)
-            #print(y_spec_single) 
-            if i == initial_index[0]:
-                x_spec = np.add(x_spec,x_spec_single)
-            y_spec = np.add(y_spec,np.abs(y_spec_single))
-        #print(x_spec)
-        #x_spec, y_spec = self.get_spectrum_single_vertex(a, c, 0, number_of_eigenvalues)
-        print(f'y_spec = {y_spec}')
+
+        #for j in range(S.P.shape[0]):
+        #    y_spec_single = self.get_y_spec_single_vertex(j, a, c, number_of_eigenvalues) 
+        #    y_spec = np.add(y_spec,y_spec_single)   
+
+        vfunc = np.vectorize(self.get_y_spec_single_vertex,  otypes=[np.ndarray], signature="(n),(m),(),() -> (n,o)")
+        y_spec_single = vfunc(np.arange(S.P.shape[0]),a, c, number_of_eigenvalues)
+        y_spec = np.sum(y_spec_single, axis=0)
+        #y_spec = np.abs(y_spec)
+
+        x_spec = self.get_x_spec(c, number_of_eigenvalues)
         return x_spec, y_spec
 
     def write_sound_to_file(self, c, peak_range, number_of_eigenvalues, initial_func, pick_or_beat):
@@ -331,7 +346,6 @@ class Make_Sound:
         #sig.plot()
         return sig 
 
-    
 
     def sound_single_vertex_beat(self, a, w, EVs, c, j, number_of_eigenvalues):
         sig = None
@@ -339,21 +353,17 @@ class Make_Sound:
         for i in range(number_of_eigenvalues):
             sin_sig = SinSignal(freq=c*w[i], amp=abs(a[i]*EVs[j][i]), offset=0)
             sig += sin_sig 
-        #sig.plot()
         return sig 
 
     def get_highest_frequency(self, c, number_of_eigenvalues):
+        """
+
+        """
         i = len(self.S.evs)
         return c*self.S.evs[number_of_eigenvalues-1]
 
-    def set_random_spectrum(self, c, number_of_eigenvalues):
-        hf = self.get_highest_frequency(c,number_of_eigenvalues)
-        x_spec = np.random.uniform(0, hf * 1.2, number_of_eigenvalues)
-        x_spec = np.sort(x_spec)
-        y_spec = np.random.uniform(0, 1., number_of_eigenvalues)
-        return x_spec, y_spec
 
-    def create_morphing_func(self, c, number_of_eigenvalues, wave,p, initial_func='sawtooth', pick_or_beat='pick'):
+    def create_morphing_func(self, c, number_of_eigenvalues, wave, peak_range, p, initial_func, pick_or_beat):
         i_f = initial_func
         p_o_b = pick_or_beat
         n = len(wave.ys)
@@ -368,7 +378,7 @@ class Make_Sound:
         convolution = morphing.smooth_func(global_func, p, length)
         return convolution
 
-    def write_morphed_sound(self, c, number_of_eigenvalues, wave,recorded_wave,p, initial_func='sawtooth', pick_or_beat='pick'):
+    def write_morphed_sound(self, c, number_of_eigenvalues, wave,recorded_wave,peak_range, p, initial_func, pick_or_beat):
         i_f = initial_func
         p_o_b = pick_or_beat
         l1 = wave.__len__()
@@ -385,7 +395,7 @@ class Make_Sound:
         #spectrum_domain = rec_spectrum.fs
         #spectrum_hs = rec_spectrum.hs
         len_rec = rec_spectrum.hs[0]
-        convolution = self.create_morphing_func(c, number_of_eigenvalues, wave, p, i_f, p_o_b)
+        convolution = self.create_morphing_func(c, number_of_eigenvalues, wave,peak_range, p, i_f, p_o_b)
         len_conv = convolution[0]
         morphed_spectrum_hs = convolution * rec_spectrum.hs
         len_morph = morphed_spectrum_hs[0]
@@ -411,6 +421,16 @@ class Make_Sound:
         morphed_wave.write(filename)
         #print('new signal written')
         return morphed_wave, len_rec, len_conv, len_morph
+
+    def set_random_spectrum(self, c, number_of_eigenvalues):
+        """
+        This generates a discrete random spactrum
+        """
+        hf = self.get_highest_frequency(c,number_of_eigenvalues)
+        x_spec = np.random.uniform(0, hf * 1.2, number_of_eigenvalues)
+        x_spec = np.sort(x_spec)
+        y_spec = np.random.uniform(0, 1., number_of_eigenvalues)
+        return x_spec, y_spec
 
     def write_random_sound_to_file(self, c,  number_of_eigenvalues):
         x_spec, y_spec = self.set_random_spectrum(c, number_of_eigenvalues)
@@ -442,7 +462,7 @@ X = MS.set_matrix(0.2)
 initial_func = MS.set_initial_function(3, 0.0, initial_func='sawtooth')
 #print(initial_func)
 c = 0.2
-peak_range = 0.1
-a = MS.determine_coefficients(peak_range, c, initial_func='cone', pick_or_beat='pick')
-print(f'a = {a}')
-MS.get_spectrum(c,peak_range, 100, initial_func='cone', pick_or_beat='pick')
+#peak_range = 0.1
+#a = MS.determine_coefficients(peak_range, c, initial_func='cone', pick_or_beat='pick')
+#print(f'a = {a}')
+#MS.get_spectrum(c,peak_range, 100, initial_func='cone', pick_or_beat='pick')

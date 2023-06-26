@@ -36,10 +36,9 @@ def sound_to_file():
     number_of_eigen_frequencies = st.session_state.noef
     peak_range = st.session_state.peak_range_slider
     p = st.session_state.p_slider
-    random_vertices = st.session_state.rand_vtx
     #MS.write_sound_to_file(c, number_of_eigen_frequencies, initial_func=waveform, pick_or_beat=p_o_b)
 
-random_vertices = st.sidebar.checkbox('Vertices are randomly choosen',key='rand_vtx',on_change=sound_to_file)
+#random_vertices = st.sidebar.checkbox('Vertices are randomly choosen',key='rand_vtx',on_change=sound_to_file)
 surface = st.sidebar.selectbox('Select Surface', ['Major Ellipsoid', 'Minor Ellipsoid','Power Ellipsoid'], key='surface_box', on_change=update_surfce)
 number_of_eigen_frequencies = st.sidebar.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef',on_change=sound_to_file)
 waveform = st.sidebar.selectbox('Select Waveform', ['cone', 'sawtooth', 'single point', 'cylinder'], key='wave_box', on_change=sound_to_file)
@@ -49,7 +48,8 @@ peak_range = st.sidebar.slider('Peak Range', 0.0, 1.,step=0.01, value=0.0, key='
 
 
 S = surf.Surface(surface)
-S.set_initial_idxs(random_vertices)
+
+
 initial_indices = S.initial_idxs
 MS = ms1.Make_Sound(S, initial_indices,p_o_b)
 wave_surface = MS.write_sound_to_file(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
@@ -86,10 +86,10 @@ n = len(wave_surface.ys)
 d = 1 / wave_surface.framerate
 spectrum_domain = np.fft.fftfreq(n,d)
 framerate = wave_surface.framerate
-x_spec , y_spec = MS.get_spectrum(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
+#x_spec , y_spec = MS.get_spectrum(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
 
 log_length = math.log(float(n))
-p = st.sidebar.slider('morphing width', 0.1, log_length, step=0.01, value=0.01, key='p_slider', on_change=sound_to_file)
+p = st.sidebar.slider('morphing width', 0.1, log_length, step=0.01, value=0.1*log_length, key='p_slider', on_change=sound_to_file)
 p = math.exp(p)
 
 x_spec , y_spec = MS.get_spectrum(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
@@ -99,13 +99,11 @@ fig2, ax2 = plt.subplots()
 ax2.set_title('Spectrum and Morphing Function', fontstyle='italic')
 x2 = Spectrum.fs
 y2 = Spectrum.hs
-convolution = MS.create_morphing_func(c, number_of_eigen_frequencies, wave_surface, p, waveform, p_o_b)
+convolution = MS.create_morphing_func(c, number_of_eigen_frequencies, wave_surface, peak_range, p, waveform, p_o_b)
 
 ax2.set_xlim([0, hf * 1.2])
 ax2.plot(x2,y2,x2,convolution)
 
-#st.write('x = ' + str(x))
-#st.write('y = ' + str(y))
 st.pyplot(fig2)
 st.checkbox('random vertices')
 
@@ -161,7 +159,7 @@ st.audio(uploaded_file, format='../audio/wav')
 #st.write(uploaded_file)
 
 
-morphed_wave,len_rec, len_conv, len_morph = MS.write_morphed_sound(c, number_of_eigen_frequencies, wave_surface,recorded_wave,p, waveform, p_o_b)
+morphed_wave,len_rec, len_conv, len_morph = MS.write_morphed_sound(c, number_of_eigen_frequencies, wave_surface,recorded_wave,peak_range, p, waveform, p_o_b)
 st.write(f'len_rec = {len_rec}, len_conv = {len_conv}, len_morph = {len_morph}')
 
 filename = os.path.join(desktop, "morphed_signal.wav")

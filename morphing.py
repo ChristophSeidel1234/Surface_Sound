@@ -117,7 +117,8 @@ class Global_Function:
 
 def set_global_function(gf):
     """
-    This is a recursive method that actually has the structure of a binary tree and sets the global rectangle function to the object gf.
+    This is a divide and conquer algorithm that generates a rectangular function of width 2*p over the largest amplitude 
+    and calls itself both left and right of the rectangular function as long as there is left or right.
     """
     if gf is not None:
         func = Rectangle_Function(gf.p, gf.x_value, gf.max_spec, gf.domain)
@@ -265,7 +266,7 @@ x = spectrum.fs
 
 
 
-#fig, ax = plt.subplots()
-#ax.plot(x,y)
+ig, ax = plt.subplots()
+ax.plot(x,y)
 #plt.show()
 

@@ -1,7 +1,7 @@
 import streamlit as st 
 import numpy as np
 from initial_conditions import provide_initial_condition
-import make_sound as ms
+#import make_sound as ms
 import make_sound_1 as ms1
 import os
 import matplotlib.pyplot as plt
@@ -39,7 +39,7 @@ def sound_to_file():
     #MS.write_sound_to_file(c, number_of_eigen_frequencies, initial_func=waveform, pick_or_beat=p_o_b)
 
 #random_vertices = st.sidebar.checkbox('Vertices are randomly choosen',key='rand_vtx',on_change=sound_to_file)
-surface = st.sidebar.selectbox('Select Surface', ['Major Ellipsoid', 'Minor Ellipsoid','Power Ellipsoid'], key='surface_box', on_change=update_surfce)
+surface = st.sidebar.selectbox('Select Surface', ['Power Ellipsoid', 'Major Ellipsoid', 'Minor Ellipsoid'], key='surface_box', on_change=update_surfce)
 number_of_eigen_frequencies = st.sidebar.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef',on_change=sound_to_file)
 waveform = st.sidebar.selectbox('Select Waveform', ['cone', 'sawtooth', 'single point', 'cylinder'], key='wave_box', on_change=sound_to_file)
 p_o_b = st.sidebar.radio('Pick or Hit', ['pick', 'hit'], key='pick_or_beat', on_change=sound_to_file)
@@ -51,8 +51,8 @@ S = surf.Surface(surface)
 
 
 initial_indices = S.initial_idxs
-MS = ms1.Make_Sound(S, initial_indices,p_o_b)
-wave_surface = MS.write_sound_to_file(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
+MS = ms1.Make_Sound(S, number_of_eigen_frequencies,p_o_b)
+wave_surface = MS.write_sound_to_file(c,peak_range, waveform, p_o_b)
 
 # Get the current user's home directory
 home = os.path.expanduser("~")
@@ -92,14 +92,17 @@ log_length = math.log(float(n))
 p = st.sidebar.slider('morphing width', 0.1, log_length, step=0.01, value=0.1*log_length, key='p_slider', on_change=sound_to_file)
 p = math.exp(p)
 
-x_spec , y_spec = MS.get_spectrum(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
+x_spec = MS.x_spec
+y_spec = MS.y_spec
+st.write(f'x_spec = {len(x_spec)}')
+st.write(f'y_spec = {len(y_spec)}')
 Spectrum = morphing.make_spectrum(x_spec, y_spec, spectrum_domain,framerate)
 
 fig2, ax2 = plt.subplots()
 ax2.set_title('Spectrum and Morphing Function', fontstyle='italic')
 x2 = Spectrum.fs
 y2 = Spectrum.hs
-convolution = MS.create_morphing_func(c, number_of_eigen_frequencies, wave_surface, peak_range, p, waveform, p_o_b)
+convolution = MS.create_morphing_func(c, wave_surface, p)
 
 ax2.set_xlim([0, hf * 1.2])
 ax2.plot(x2,y2,x2,convolution)
@@ -159,7 +162,7 @@ st.audio(uploaded_file, format='../audio/wav')
 #st.write(uploaded_file)
 
 
-morphed_wave,len_rec, len_conv, len_morph = MS.write_morphed_sound(c, number_of_eigen_frequencies, wave_surface,recorded_wave,peak_range, p, waveform, p_o_b)
+morphed_wave,len_rec, len_conv, len_morph = MS.write_morphed_sound(c, wave_surface,recorded_wave, p)
 st.write(f'len_rec = {len_rec}, len_conv = {len_conv}, len_morph = {len_morph}')
 
 filename = os.path.join(desktop, "morphed_signal.wav")

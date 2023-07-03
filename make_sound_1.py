@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from thinkdsp import CosSignal, SinSignal, normalize, decorate
 import thinkdsp
 import morphing
+from collections import Counter
 
 PI = math.pi 
 
@@ -119,23 +120,35 @@ def test_wedge_array():
 
 test_wedge_array()
 
+def sum_up_multiple_eigenvalues(arr):
+    # Use Counter to count occurrences of unique values
+    counter = Counter(arr)   
+    # Multiply the unique values by their counts
+    new_array = np.array([value * count for value, count in counter.items()]) 
+    return new_array
+
+
 
 
 class Make_Sound:
-    def __init__(self, S, number_of_overtones, pick_or_beat):
+    def __init__(self, S, number_of_overtones, pick_or_beat, x_spec=None, y_spec=None):
         self.S = S 
         self.number_of_overtones = number_of_overtones
         self.pick_or_beat = pick_or_beat
+        self.x_spec = x_spec
+        self.y_spec = y_spec
+
+    
 
     def set_matrix(self, c):
         """ 
-        This gives the matrix to pull on the surface
+        This gives the matrix to pick or hit on the surface
 
-        initial_index: the index of the vertex where we pull/pick
+        initial_index: the index of the vertex where we pick or hit
 
         number_of_eigenvalues: the number of overtones
         """
-        s = self.S
+        S = self.S
         p_o_b = self.pick_or_beat
         EVs = S.EVs
         w = S.evs
@@ -169,7 +182,7 @@ class Make_Sound:
 
 
     def set_initial_function(self, n, peak_range, initial_func):
-        hight = 10.
+        hight = 1.
         S = self.S 
         center = S.find_center_point()
         x_0 = center[0]
@@ -187,13 +200,10 @@ class Make_Sound:
         if initial_func == 'cone':
             vfunc = np.vectorize(self.set_cone_func, otypes=[np.ndarray],signature="(n),(),(),() -> ()")
             hights = vfunc(selected_points, wedges_dict, hight, n)
-            print(f'in cone')
         elif initial_func == 'sawtooth':
-            print(f'in sawtooth')
             vfunc = np.vectorize(self.set_sawtooth_func, otypes=[np.ndarray],signature="(n),(),(),() -> ()")
             hights = vfunc(selected_points, wedges_dict, hight, n)
         else:
-            print(f'in single point')
             hights = np.zeros(len(selected_points))
             hights[0] = hight
             
@@ -276,6 +286,7 @@ class Make_Sound:
         n = 3
         a = self.determine_coefficients(peak_range, c, i_f, p_o_b)
 
+        #The next 3 rows
         #for j in range(S.P.shape[0]):
         #    y_spec_single = self.get_y_spec_single_vertex(j, a, c, number_of_eigenvalues) 
         #    y_spec = np.add(y_spec,y_spec_single)   
@@ -283,15 +294,29 @@ class Make_Sound:
         vfunc = np.vectorize(self.get_y_spec_single_vertex,  otypes=[np.ndarray], signature="(n),(m),(),() -> (n,o)")
         y_spec_single = vfunc(np.arange(S.P.shape[0]),a, c, number_of_eigenvalues)
         y_spec = np.sum(y_spec_single, axis=0)
-        #y_spec = np.abs(y_spec)
 
         x_spec = self.get_x_spec(c, number_of_eigenvalues)
-        return x_spec, y_spec
+        # Get unique values and their indices
+        unique_values, indices = np.unique(x_spec, return_index=True)
+        # Sort the unique values based on their indices
+        sorted_indices = np.argsort(indices)
+        sorted_unique_values = unique_values[sorted_indices]
+        # Create the new array with unique values
+        x_new = sorted_unique_values
+        # Sum up the corresponding y values for each unique value of x
+        y_new = [np.sum(y_spec[x_spec == value]) for value in x_new]
+        #y_spec = sum_up_multiple_eigenvalues(y_spec)
+        self.x_spec = x_new
+        self.y_spec = y_new
 
-    def write_sound_to_file(self, c, peak_range, number_of_eigenvalues, initial_func, pick_or_beat):
+        
+
+    def write_sound_to_file(self, c, peak_range, initial_func, pick_or_beat):
         i_f = initial_func
         p_o_b = pick_or_beat
-        x_spec, y_spec = self.get_spectrum(c,peak_range,number_of_eigenvalues,initial_func=i_f, pick_or_beat=p_o_b)
+        self.get_spectrum(c,peak_range,self.number_of_overtones,initial_func=i_f, pick_or_beat=p_o_b)
+        x_spec = self.x_spec
+        y_spec = self.y_spec
         sig = 0
         if pick_or_beat == 'pick':
             for i in range(len(x_spec)):
@@ -363,14 +388,15 @@ class Make_Sound:
         return c*self.S.evs[number_of_eigenvalues-1]
 
 
-    def create_morphing_func(self, c, number_of_eigenvalues, wave, peak_range, p, initial_func, pick_or_beat):
-        i_f = initial_func
-        p_o_b = pick_or_beat
+    def create_morphing_func(self, c, wave, p):
+        #i_f = initial_func
+        #p_o_b = pick_or_beat
         n = len(wave.ys)
-        d = 1 / wave.framerate
+        d = 1. / wave.framerate
         spectrum_domain = np.fft.fftfreq(n,d)
         framerate = wave.framerate
-        x_spec , y_spec = self.get_spectrum(c, peak_range, number_of_eigenvalues, i_f, p_o_b)
+        x_spec = self.x_spec
+        y_spec = self.y_spec
         gf = morphing.Global_Function(p, x_spec, y_spec, spectrum_domain)
         morphing.set_global_function(gf)
         global_func = gf.func
@@ -378,9 +404,7 @@ class Make_Sound:
         convolution = morphing.smooth_func(global_func, p, length)
         return convolution
 
-    def write_morphed_sound(self, c, number_of_eigenvalues, wave,recorded_wave,peak_range, p, initial_func, pick_or_beat):
-        i_f = initial_func
-        p_o_b = pick_or_beat
+    def write_morphed_sound(self, c, wave,recorded_wave, p):
         l1 = wave.__len__()
         l2 = recorded_wave.__len__()
         length = l1
@@ -395,7 +419,7 @@ class Make_Sound:
         #spectrum_domain = rec_spectrum.fs
         #spectrum_hs = rec_spectrum.hs
         len_rec = rec_spectrum.hs[0]
-        convolution = self.create_morphing_func(c, number_of_eigenvalues, wave,peak_range, p, i_f, p_o_b)
+        convolution = self.create_morphing_func(c, wave, p)
         len_conv = convolution[0]
         morphed_spectrum_hs = convolution * rec_spectrum.hs
         len_morph = morphed_spectrum_hs[0]
@@ -456,10 +480,10 @@ class Make_Sound:
         return wave
 
 
-S = sf.Surface('Minor Ellipsoid')
-MS = Make_Sound(S,20,'pick')
+S = sf.Surface('Power Ellipsoid')
+MS = Make_Sound(S,20,'hit')
 X = MS.set_matrix(0.2)
-initial_func = MS.set_initial_function(3, 0.0, initial_func='sawtooth')
+initial_func = MS.set_initial_function(3, 0.0, initial_func='cone')
 #print(initial_func)
 c = 0.2
 #peak_range = 0.1

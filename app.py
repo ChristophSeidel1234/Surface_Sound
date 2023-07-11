@@ -41,7 +41,7 @@ def sound_to_file():
 #random_vertices = st.sidebar.checkbox('Vertices are randomly choosen',key='rand_vtx',on_change=sound_to_file)
 surface = st.sidebar.selectbox('Select Surface', ['Power Ellipsoid', 'Major Ellipsoid', 'Minor Ellipsoid'], key='surface_box', on_change=update_surfce)
 number_of_eigen_frequencies = st.sidebar.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef',on_change=sound_to_file)
-waveform = st.sidebar.selectbox('Select Waveform', ['cone', 'sawtooth', 'single point', 'cylinder'], key='wave_box', on_change=sound_to_file)
+waveform = st.sidebar.selectbox('Select Waveform', ['cylinder', 'cone'], key='wave_box', on_change=sound_to_file)
 p_o_b = st.sidebar.radio('Pick or Hit', ['pick', 'hit'], key='pick_or_beat', on_change=sound_to_file)
 c = st.sidebar.slider('Propagation Velocity', 0.0, 0.6,step=0.01, value=0.1, key='c_slider', on_change=sound_to_file)
 peak_range = st.sidebar.slider('Peak Range', 0.0, 1.,step=0.01, value=0.0, key='peak_range_slider', on_change=sound_to_file)
@@ -94,8 +94,8 @@ p = math.exp(p)
 
 x_spec = MS.x_spec
 y_spec = MS.y_spec
-st.write(f'x_spec = {len(x_spec)}')
-st.write(f'y_spec = {len(y_spec)}')
+#st.write(f'x_spec = {len(x_spec)}')
+#st.write(f'y_spec = {len(y_spec)}')
 Spectrum = morphing.make_spectrum(x_spec, y_spec, spectrum_domain,framerate)
 
 fig2, ax2 = plt.subplots()
@@ -163,7 +163,7 @@ st.audio(uploaded_file, format='../audio/wav')
 
 
 morphed_wave,len_rec, len_conv, len_morph = MS.write_morphed_sound(c, wave_surface,recorded_wave, p)
-st.write(f'len_rec = {len_rec}, len_conv = {len_conv}, len_morph = {len_morph}')
+#st.write(f'len_rec = {len_rec}, len_conv = {len_conv}, len_morph = {len_morph}')
 
 filename = os.path.join(desktop, "morphed_signal.wav")
 

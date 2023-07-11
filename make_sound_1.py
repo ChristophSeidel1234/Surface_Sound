@@ -7,6 +7,7 @@ from thinkdsp import CosSignal, SinSignal, normalize, decorate
 import thinkdsp
 import morphing
 from collections import Counter
+import scipy
 
 PI = math.pi 
 
@@ -163,13 +164,13 @@ class Make_Sound:
                 X[:,i] = c * w[i] * EVs[:,i][initial_index]
         return X
 
-    def set_cone_func(self, point, wedges_dict, h, n):
-        wedge = find_wedge(point, n)
-        max_point = wedges_dict.get(wedge)
-        max_dist = np.linalg.norm(max_point)
-        point_dist = np.linalg.norm(point)
-        point_h = h * (max_dist - point_dist) / max_dist 
-        return point_h
+    #def set_cone_func(self, point, wedges_dict, h, n):
+    #    wedge = find_wedge(point, n)
+     #   max_point = wedges_dict.get(wedge)
+    #    max_dist = np.linalg.norm(max_point)
+    #    point_dist = np.linalg.norm(point)
+     #   point_h = h * (max_dist - point_dist) / max_dist 
+    #    return point_h
 
     def set_sawtooth_func(self, point, wedges_dict, h, n):
         wedge = find_wedge(point, n)
@@ -179,48 +180,120 @@ class Make_Sound:
         point_h = h * point_dist / max_dist 
         return point_h
 
+    def set_upper_cone_func(self, point, wedges_dict, h, n, l):
+        wedge = find_wedge(point, n)
+        max_point = wedges_dict.get(wedge)
+        max_dist = np.linalg.norm(max_point)
+        point_dist = np.linalg.norm(point)
+        scaled_dist = point_dist / max_dist / 2.
+        point_h = 0.0
+        if l > scaled_dist:
+            point_h = h * (1. - scaled_dist / l)
+        return point_h
+
+    def set_lower_cone_func(self, point, wedges_dict, h, n, l):
+        wedge = find_wedge(point, n)
+        max_point = wedges_dict.get(wedge)
+        max_dist = np.linalg.norm(max_point)
+        point_dist = np.linalg.norm(point)
+        scaled_dist = point_dist / max_dist
+        point_h = 0.0
+        if (l - 0.5) > (1. - scaled_dist) / 2.:
+            new_dist = (2. - scaled_dist) / 2.
+            point_h =  h * (1. - new_dist / l)
+        return point_h
 
 
-    def set_initial_function(self, n, peak_range, initial_func):
+
+    def set_upper_cylinder_func(self, point, wedges_dict, h, n, l):
+        wedge = find_wedge(point, n)
+        max_point = wedges_dict.get(wedge)
+        max_dist = np.linalg.norm(max_point)
+        point_dist = np.linalg.norm(point)
+        scaled_dist = point_dist / max_dist
+        point_h = 0.0
+        if l > scaled_dist/ 2.:
+            point_h = h
+        return point_h
+    
+    def set_lower_cylinder_func(self, point, wedges_dict, h, n, l):
+        wedge = find_wedge(point, n)
+        max_point = wedges_dict.get(wedge)
+        max_dist = np.linalg.norm(max_point)
+        point_dist = np.linalg.norm(point)
+        scaled_dist = point_dist / max_dist
+        point_h = 0.0
+        if (l - 0.5) > (1. - scaled_dist)/2.:
+            point_h = h 
+        return point_h
+    
+    def set_cylinder_func(self, point, z, wedges_dict, h, n, l):
+        if z > 0:
+            return self.set_upper_cylinder_func(point, wedges_dict, h, n, l)
+        else:
+            return self.set_lower_cylinder_func(point, wedges_dict, h, n, l)
+      
+    def set_cone_func(self, point, z, wedges_dict, h, n, l):
+        if z > 0:
+            return self.set_upper_cone_func(point, wedges_dict, h, n, l)
+        else:
+            return self.set_lower_cone_func(point, wedges_dict, h, n, l)
+        
+    def set_wedges_dict(self, P_xy, n):
+        wedge_arr = sf.set_wedge_array(P_xy, n)
+        grouped_array = sf.group_points(P_xy, wedge_arr)
+        max_norm_points, wedge_values = sf.find_max_norm_points(grouped_array, n)
+        wedges_dict = dict(list(zip(wedge_values, max_norm_points)))
+        return wedges_dict
+
+
+    def set_initial_function(self, n, l, initial_func):
         hight = 1.
         S = self.S 
         center = S.find_center_point()
         x_0 = center[0]
         x_1 = S.find_point_with_max_dist()
-        x = (1 - peak_range) * x_0 + peak_range * x_1
+        x = (1 - l) * x_0 + l * x_1
         center[0] = x 
-        P_xy = S.pos_pts[:,:2] - center
-        # This should be a single statement
-        wedge_arr = sf.set_wedge_array(P_xy, n)
-        grouped_array = sf.group_points(P_xy, wedge_arr)
-        max_norm_points, wedge_values = sf.find_max_norm_points(grouped_array, n)
-        wedges_dict = dict(list(zip(wedge_values, max_norm_points)))
-
-        selected_points = S.pos_pts[S.max_odd_idx][:,:2] - center
+        P_xy = S.P[:,:2]
+        P_z = S.P[:,2]
+        
+        wedges_dict = self.set_wedges_dict(P_xy, n)
+        selected_points = P_xy[S.initial_idxs]
+        
         if initial_func == 'cone':
-            vfunc = np.vectorize(self.set_cone_func, otypes=[np.ndarray],signature="(n),(),(),() -> ()")
-            hights = vfunc(selected_points, wedges_dict, hight, n)
-        elif initial_func == 'sawtooth':
-            vfunc = np.vectorize(self.set_sawtooth_func, otypes=[np.ndarray],signature="(n),(),(),() -> ()")
-            hights = vfunc(selected_points, wedges_dict, hight, n)
-        else:
-            hights = np.zeros(len(selected_points))
-            hights[0] = hight
+            selected_points = P_xy[S.initial_idxs]
+            z = P_z[S.initial_idxs]
+            vfunc = np.vectorize(self.set_cone_func, otypes=[np.ndarray],signature="(n),(),(),(),(),() -> ()")
+            hights = vfunc(selected_points,z, wedges_dict, hight, n,l)
+        elif initial_func == 'cylinder':
+            #print(f'len(P_xy) = {len(P_xy)} and initial_idxs = {S.initial_idxs}' )
+            selected_points = P_xy[S.initial_idxs]
+            z = P_z[S.initial_idxs]
+            vfunc = np.vectorize(self.set_cylinder_func, otypes=[np.ndarray],signature="(n),(),(),(),(),() -> ()")
+            hights = vfunc(selected_points,z, wedges_dict, hight, n, l)
             
+
+        #else:
+            #hights = np.zeros(len(selected_points))
+            #hights[0] = hight
+        graph_domain = np.copy(selected_points)
+        for i in range(len(graph_domain)):
+            if z[i] <= 0:
+                l_p = np.linalg.norm(graph_domain[i])
+                graph_domain[i] = (2.*x_1/l_p - 1.) * graph_domain[i]   
         ### Plot
-        S = self.S
-        P_xy = S.pos_pts[:,:2]
-        x = selected_points[:,0]
-        y = selected_points[:,1]
+        x = graph_domain[:,0]
+        y = graph_domain[:,1]
         fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
         ax.stem(x, y, hights)
         #plt.show()
         l = len(S.initial_idxs) - len(hights)
         zeros = np.zeros(l)
         initial_condition = zip_arrays(hights, zeros)
-        return initial_condition 
+        return hights 
 
-    def determine_coefficients(self,peak_range, propagation_velocity, initial_func, pick_or_beat):
+    def determine_coefficients(self,l, propagation_velocity, initial_func, pick_or_beat):
         """ 
         provide the coefficients of the generalized Fourier series
         """
@@ -231,11 +304,18 @@ class Make_Sound:
         p_o_b = pick_or_beat
         n = 3
         # load initial conditions
-        initial_condition = self.set_initial_function(n, peak_range, initial_func)
+        initial_condition = self.set_initial_function(n, l, initial_func)
+        #initial_condition = np.array(initial_condition)
+        initial_condition = initial_condition.astype('float64')
         c = propagation_velocity
         w = evs
         X = self.set_matrix(c)
-        a = np.linalg.solve(X, initial_condition)
+        X = X.astype('float64')
+        # Here I use Singular Value Decomposition (SVD): Instead of directly solving the system using np.linalg.solve 
+        # in order to avoid singular value exception
+        U, s, V = np.linalg.svd(X)
+        a = np.dot(np.dot(V.T, np.linalg.inv(np.diag(s))), np.dot(U.T, initial_condition))
+        #a = np.linalg.solve(X, initial_condition)
         return a
 
     def get_spectrum_single_vertex(self, a, c, j, number_of_eigenvalues):
@@ -286,7 +366,7 @@ class Make_Sound:
         n = 3
         a = self.determine_coefficients(peak_range, c, i_f, p_o_b)
 
-        #The next 3 rows
+        #The next rows are simply:
         #for j in range(S.P.shape[0]):
         #    y_spec_single = self.get_y_spec_single_vertex(j, a, c, number_of_eigenvalues) 
         #    y_spec = np.add(y_spec,y_spec_single)   
@@ -325,7 +405,7 @@ class Make_Sound:
             for i in range(len(x_spec)):
                 sig += SinSignal(freq=x_spec[i], amp=y_spec[i], offset=0)
 
-        wave = sig.make_wave(duration=5.5, start=0, framerate=44100)
+        wave = sig.make_wave(duration=11.5, start=0, framerate=44100)
         audio = wave.make_audio()
 
         # Get the current user's home directory
@@ -480,13 +560,24 @@ class Make_Sound:
         return wave
 
 
-S = sf.Surface('Power Ellipsoid')
-MS = Make_Sound(S,20,'hit')
+S = sf.Surface('Major Ellipsoid')
+P = S.P 
+EVs = S.EVs
+MS = Make_Sound(S,20,'pick')
 X = MS.set_matrix(0.2)
-initial_func = MS.set_initial_function(3, 0.0, initial_func='cone')
-#print(initial_func)
+print(f'matrix shape = {X.shape}')
+from numpy.linalg import matrix_rank
+rank = matrix_rank(X)
+print(f'rank = {rank}')
+n = X.shape[0]
+if rank < n:
+    print("The matrix is singular.")
+else:
+    print("The matrix is not singular.")
+initial_func = MS.set_initial_function(3, 0.85, initial_func='cylinder')
+print(initial_func)
 c = 0.2
-#peak_range = 0.1
-#a = MS.determine_coefficients(peak_range, c, initial_func='cone', pick_or_beat='pick')
+l = 0.1
+a = MS.determine_coefficients(l, c, initial_func='cylinder', pick_or_beat='pick')
 #print(f'a = {a}')
 #MS.get_spectrum(c,peak_range, 100, initial_func='cone', pick_or_beat='pick')

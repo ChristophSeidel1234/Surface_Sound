@@ -1,6 +1,6 @@
 # Sound of Surfaces
 
-This app is a software synthesizer that makes virtual surfaces sound. To put it more precisely, we solve the wave equation on surfaces and additionally glue every conceivable recorded sound onto it.
+This app is a software synthesizer that makes virtual surfaces sound. To put it more precisely, we solve the wave equation on surfaces and additionally glue every conceivable recorded sound onto it. The basic idea is that we know [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures) and make sound out of it.
 
 ## Run the App
 
@@ -23,7 +23,7 @@ This app is a software synthesizer that makes virtual surfaces sound. To put it 
 ## Instructions
 We go step by step from top to bottom through the app.
 * **Select Surface**\
-I have chosen the shape of the surfaces (i.e. tuned them) so that the fundamental tone together with the first overtones form a major, minor or power cord.
+We have chosen the shape of the surfaces (i.e. tuned them) so that the fundamental tone together with the first overtones form a major, minor or power cord.
 <div style="display: flex;">
   <img src="images/major.jpg" width="30%" alt="major">
   <img src="images/minor.jpg" width="30%" alt="minor">
@@ -42,9 +42,24 @@ Pick gives the location and Hit the speed in the initial conditions. If you thin
 * **Propagation Velocity**\
 This means how fast is the speed of the wave on the surface. This is also like tuning an instrument, since the propagation velocity is coupled to the frequencies in the wave equation.
 * **Morphing Width**\
-   Here you can specify how much the recorded sound should be morphed onto the surface. The construction is as follows: build a rectangular function      of width 2 * `Morphing Width` around the discrete spectrum of the surface, smooth this with a suitable mollifier via the convolution theorem,          multiply this with the spectrum of the recorded sound and send it back with the inverse Fourier transfom.\
+   Here you can specify how much the recorded sound should be morphed onto the surface. The construction is as follows: build a rectangular function      of width 2 * `Morphing Width` around the discrete spectrum of the surface, smooth this with a suitable mollifier via the convolution theorem, multiply this with the spectrum of the recorded sound and send it back with the inverse Fourier transfom.\
    <img src="images/morphing_function.jpg" width="60%" alt="morphing_function">\
    This can also be seen as a very special filter that opens many small gates that nestle around the surface spectrum.
+* **The pure Surface Sound**\
+It is simply the sound of the virtual surface.
+* **Choose a File**\
+Please use only wav files with framerate=44100. You can find some examples in the folder recorded_sounds.
+* **Uploaded Sound**\
+The uploaded sound
+* **Graphics**
+   * **Surface Spectrum and Morphing Function**\
+     Shows the spectra of the surface and the morphing function you have choosen.
+   * **Spectrum of the Recorded Sound**\
+     Shows the spectrum of the recorded sound.
+   * **Surface Spectrum and Recorded Spectrum**\
+     This is the graphic you should work with. Here you can synchronise the fundamental tone of both spectra via the "Propagation Velocity / Tuning" slider.
+   * **Discrete White Noise**
+     That's just for comparison. You can hear the corresponding sound below. The discrete white noise changes randomly each time a slider is operated depending on the operating          system.
 
-Finally, I would like to mention that each change of the above options writes or changes a file named `new_signal.wav` on your desktop with respect to the selected properties.
+Finally, we would like to mention that each change of the above options writes or changes files named `new_signal.wav` and `morphed_signal.wav` on your desktop with respect to the selected properties.
 

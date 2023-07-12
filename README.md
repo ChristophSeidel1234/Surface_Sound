@@ -6,14 +6,16 @@ This app is a software synthesizer that makes virtual surfaces sound.
 
 * Clone the following [GitHub repository](https://github.com/ChristophSeidel1234/Surface_Sound)
 * Open a terminal an go to your current working directory.
-* Now we build a virtual environment so that all used modules run conflict-free. Here is a way to do that with VIRTUALENV. For more information see the (https://virtualenv.pypa.io/en/latest/)
-    * `pip install virtualenv` (if you don't already have virtualenv installed) 
-    * create a new environment and select the python version \
-    `virtualenv <environment name> --python=python=3.10.9`
-    * activate the environment\
-    `source <environment name>/bin/activate`
-    * install all required modules\
+* Now we recommend to build a virtual environment so that all used modules run conflict-free. Here is a way to do that with `venv`. This is a Python buildt in environment that does not require any additional installation and has the advantage that it only exists locally in this folder. For more information see  [venv](https://docs.python.org/3/library/venv.html#module-venv)
+    * Create a new environment\
+    `python -m venv .venv`
+    The last parameter, `.venv`, is the name of the directory to install the virtual environment into. You can name this whatever you would like.
+    * Activate the environment\
+    If you are on Windows, you will use `.venv\Scripts\activate.bat`.\
+    On other OSes, you will use source `.venv/bin/activate.`
+    * Install all required modules\
     `pip install -r requirements.txt`
+    * Once you are finished, just use the `deactivate` command to exit the virtual environment.
 
 * run the app\
 `streamlit run app.py`

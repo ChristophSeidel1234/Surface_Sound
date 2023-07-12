@@ -33,8 +33,8 @@ I have chosen the shape of the surfaces (i.e. tuned them) so that the fundamenta
 
 * **Number of Overtones**\
 Here one can set the number of generalized harmonics. If you select more, the sound becomes more glassy.
-* **Select Waveform**\
-These are the different initial conditions. For example, `cone` means that one pulls out something like a tent at the surface, comparable with picking a guitar string.
+* **Select Initial Shape**\
+These are the different shapes of the initial conditions. `Cone` means that one pulls out something like a tent at the surface, comparable with picking a guitar string, whereas `Cylinder` just means a cylindrical shape of the initial conditions.
 * **Pick or Strike**\
 Pick gives the location and strike the speed in the initial conditions. If you think of physical instruments, this would be the difference between a piano and a harpsichord.
 * **Propagation Velocity**\

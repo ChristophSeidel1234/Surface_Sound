@@ -6,11 +6,12 @@ This app is a software synthesizer that makes virtual surfaces sound.
 
 * Clone the following [GitHub repository](https://github.com/ChristophSeidel1234/Surface_Sound)
 * Open a terminal an go to your current working directory.
-* Now we build a virtual environment so that all used modules run conflict-free. Here is a way to do that with ANACONDA. For more information see the [CONDA CHEAT SHEET](https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf)
+* Now we build a virtual environment so that all used modules run conflict-free. Here is a way to do that with VIRTUALENV. For more information see the (https://virtualenv.pypa.io/en/latest/)
+    * `pip install virtualenv` (if you don't already have virtualenv installed) 
     * create a new environment and select the python version \
-    `conda create -n <environment name> python=3.10.9`
+    `virtualenv <environment name> --python=python=3.10.9`
     * activate the environment\
-    `conda activate <environment name>`
+    `source <environment name>/bin/activate`
     * install all required modules\
     `pip install -r requirements.txt`
 

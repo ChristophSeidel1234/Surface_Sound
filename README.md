@@ -42,7 +42,7 @@ Pick gives the location and Hit the speed in the initial conditions. If you thin
 * **Propagation Velocity**\
 This means how fast is the speed of the wave on the surface. This is also like tuning an instrument, since the propagation velocity is coupled to the frequencies in the wave equation.
 * **Morphing Width**\
-   Here you can specify how much the recorded sound should be morphed onto the surface. The construction is as follows: build a rectangular function      of width 2 * `Morphing Width` around the discrete spectrum of the surface, smooth this with a suitable mollifier via the convolution theorem, multiply this with the spectrum of the recorded sound and send it back with the inverse Fourier transfom.\
+   Here you can specify how much the recorded sound should be morphed onto the surface. The construction is as follows: build a rectangular function of width 2 * `Morphing Width` around the discrete spectrum of the surface, smooth this with a suitable [mollifier](https://en.wikipedia.org/wiki/Mollifier) via the [convolution theorem](https://en.wikipedia.org/wiki/Convolution_theorem), multiply this with the spectrum of the recorded sound and send it back with the inverse [Fourier transfom](https://en.wikipedia.org/wiki/Fourier_transform).\
    <img src="images/morphing_function.jpg" width="60%" alt="morphing_function">\
    This can also be seen as a very special filter that opens many small gates that nestle around the surface spectrum.
 * **The pure Surface Sound**\

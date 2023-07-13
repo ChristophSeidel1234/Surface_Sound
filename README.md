@@ -57,9 +57,9 @@ The uploaded sound
    * **Spectrum of the Recorded Sound**\
      Shows the spectrum of the recorded sound.
    * **Surface Spectrum and Recorded Spectrum**\
-     This is the graphic you should work with. Here you can synchronise the fundamental tone of both spectra via the "Propagation Velocity / Tuning" slider.
+     This is the graphic you should work with. Here you can synchronise the fundamental tone of both spectra via the `Propagation Velocity / Tuning` slider.
    * **Discrete White Noise**
-     That's just for comparison. You can hear the corresponding sound below. The discrete white noise changes randomly each time a slider is operated depending on the operating          system.
+     That's just for comparison. You can hear the corresponding sound below. The discrete white noise changes randomly each time a slider is operated depending on the operating system.
 
 Finally, we would like to mention that each change of the above options writes or changes files named `new_signal.wav` and `morphed_signal.wav` on your desktop with respect to the selected properties.
 

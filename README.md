@@ -12,7 +12,7 @@ This app is a software synthesizer that makes virtual surfaces sound. To put it 
     The last parameter, `.venv`, is the name of the directory to install the virtual environment into. You can name this whatever you would like.
     * Activate the environment\
     If you are on Windows, you will use `.venv\Scripts\activate.bat`\
-    On other OSes, you will use source `.venv/bin/activate`
+    On other OSes, you will use `source .venv/bin/activate`
     * Install all required modules\
     `pip install -r requirements.txt`
     * Once you are finished, just use the `deactivate` command to exit the virtual environment.

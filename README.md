@@ -35,6 +35,11 @@ We have chosen the shape of the surfaces (i.e. tuned them) so that the fundament
 Here one can set the number of generalized harmonics. If you select more, the sound becomes more glassy.
 * **Select Initial Shape**\
 These are the different shapes of the initial conditions. `Cone` means that one pulls out something like a tent at the surface, comparable with picking a guitar string, whereas `Cylinder` just means a cylindrical shape of the initial conditions.
+<div style="display: flex;">
+  <img src="images/cone.eps" width="30%" alt="major">
+  <img src="images/minor.jpg" width="30%" alt="minor">
+  <img src="images/power.jpg" width="30%" alt="power">
+</div>
 * **Initial Value Domain**\
 This slider indicates on which part of the surface the initial shape is defined. If it is close to zero, only one point is extracted, whereas if it is one, the initial shape is created on the entire surface.
 * **Pick or Hit**\

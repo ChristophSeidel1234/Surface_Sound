@@ -36,7 +36,7 @@ Here one can set the number of generalized harmonics. If you select more, the so
 * **Select Initial Shape**\
 These are the different shapes of the initial conditions. `Cone` means that one pulls out something like a tent at the surface, comparable with picking a guitar string, whereas `Cylinder` just means a cylindrical shape of the initial conditions.
 <div style="display: flex;">
-  <img src="images/cone.eps" width="30%" alt="major">
+  <img src="images/cone.jpg" width="30%" alt="cone">
   <img src="images/minor.jpg" width="30%" alt="minor">
   <img src="images/power.jpg" width="30%" alt="power">
 </div>

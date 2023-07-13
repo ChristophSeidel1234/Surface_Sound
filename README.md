@@ -1,12 +1,12 @@
 # Sound of Surfaces
 
-This app is a software synthesizer that makes virtual surfaces sound. To put it more precisely, we solve the wave equation on surfaces and additionally glue every conceivable recorded sound onto it. The basic idea is that we know [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures) and make sound out of it.
+This app is a software synthesizer that makes virtual surfaces sound. To put it more precisely, we solve the wave equation on surfaces and additionally glue every conceivable recorded sound onto it. The basic idea is that we know the [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures) and make sound out of it.
 
 ## Run the App
 
 * Clone the following [GitHub repository](https://github.com/ChristophSeidel1234/Surface_Sound)
 * Open a terminal an go to your current working directory.
-* Now we recommend to build a virtual environment so that all used modules run conflict-free. Here is a way to do that with `venv`. This is a Python buildt in environment that does not require any additional installation and has the advantage that it only exists locally in this folder. For more information see  [venv](https://docs.python.org/3/library/venv.html#module-venv)
+* Now we recommend to build a virtual environment so that all used modules run conflict-free. Here is a way to do that with `venv`. This is a Python build in environment that does not require any additional installation and has the advantage that it only exists locally in this folder. For more information see  [venv](https://docs.python.org/3/library/venv.html#module-venv)
     * Create a new environment\
     `python -m venv .venv`
     The last parameter, `.venv`, is the name of the directory to install the virtual environment into. You can name this whatever you would like.

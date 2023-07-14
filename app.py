@@ -1,8 +1,6 @@
 import streamlit as st 
 import numpy as np
-from initial_conditions import provide_initial_condition
-#import make_sound as ms
-import make_sound_1 as ms1
+import make_sound as ms
 import os
 import matplotlib.pyplot as plt
 import thinkdsp
@@ -16,7 +14,10 @@ import surface as surf
 st.set_option('deprecation.showPyplotGlobalUse', False)
 # Write a title
 st.title('Sound of Surfaces')
+# define sidebar
 st.sidebar.markdown("Choose options here:")
+
+
 
 #def update_morphing():
 #    p = st.session_state.p_slider
@@ -24,35 +25,31 @@ st.sidebar.markdown("Choose options here:")
 def update_surfce():
     surface = st.session_state.surface_box
 
-def update_random_vertices():
-    random_vertices = st.session_state.rand_vtx
-
-
 def sound_to_file():
     """ add a listener to every option and write a sound file created by the latest properties """
     c = st.session_state.c_slider
     waveform = st.session_state.wave_box
     p_o_b = st.session_state.pick_or_beat
     number_of_eigen_frequencies = st.session_state.noef
-    peak_range = st.session_state.peak_range_slider
+    initial_value_domain = st.session_state.domain_slider
     p = st.session_state.p_slider
-    #MS.write_sound_to_file(c, number_of_eigen_frequencies, initial_func=waveform, pick_or_beat=p_o_b)
 
-#random_vertices = st.sidebar.checkbox('Vertices are randomly choosen',key='rand_vtx',on_change=sound_to_file)
 surface = st.sidebar.selectbox('Select Surface', ['Power Ellipsoid', 'Major Ellipsoid', 'Minor Ellipsoid'], key='surface_box', on_change=update_surfce)
 number_of_eigen_frequencies = st.sidebar.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef',on_change=sound_to_file)
-waveform = st.sidebar.selectbox('Select Waveform', ['cylinder', 'cone'], key='wave_box', on_change=sound_to_file)
+waveform = st.sidebar.selectbox('Select Initial Shape', ['Cone', 'Cylinder'], key='wave_box', on_change=sound_to_file)
+initial_value_domain = st.sidebar.slider('Initial Value Domain', 0.1, 1.,step=0.01, value=0.1, key='domain_slider', on_change=sound_to_file)
 p_o_b = st.sidebar.radio('Pick or Hit', ['pick', 'hit'], key='pick_or_beat', on_change=sound_to_file)
-c = st.sidebar.slider('Propagation Velocity', 0.0, 0.6,step=0.01, value=0.1, key='c_slider', on_change=sound_to_file)
-peak_range = st.sidebar.slider('Peak Range', 0.0, 1.,step=0.01, value=0.0, key='peak_range_slider', on_change=sound_to_file)
+c = st.sidebar.slider('Propagation Velocity / Tuning', 0.0, 1.0,step=0.01, value=0.1, key='c_slider', on_change=sound_to_file)
+
+
 
 
 S = surf.Surface(surface)
-
-
 initial_indices = S.initial_idxs
-MS = ms1.Make_Sound(S, number_of_eigen_frequencies,p_o_b)
-wave_surface = MS.write_sound_to_file(c,peak_range, waveform, p_o_b)
+MS = ms.Make_Sound(S, number_of_eigen_frequencies,p_o_b)
+wave_surface = MS.write_sound_to_file(c, initial_value_domain, waveform, p_o_b)
+
+wave_surface.normalize()
 
 # Get the current user's home directory
 home = os.path.expanduser("~")
@@ -66,49 +63,27 @@ if not os.path.exists(filename):
 audio_file = open(filename, 'rb')
 audio_bytes = audio_file.read()
 
-st.markdown("The pure surface sound")
+st.markdown("The pure Surface Sound")
 st.audio(audio_bytes, format='../audio/wav')
 
 hf = MS.get_highest_frequency(c, number_of_eigen_frequencies)
 spectrum = wave_surface.make_spectrum(full=True)
-## first picture
-fig1, ax = plt.subplots()
-x1 = spectrum.fs
-y1 = spectrum.hs
-y1 = np.abs(y1)
-ax.set_title('Spectrum after Fourier-transform', fontstyle='italic')
-ax.set_xlim([0, hf * 1.2])
-ax.plot(x1,y1)
-st.pyplot(fig1)
 
 #transform 
 n = len(wave_surface.ys)
 d = 1 / wave_surface.framerate
 spectrum_domain = np.fft.fftfreq(n,d)
 framerate = wave_surface.framerate
-#x_spec , y_spec = MS.get_spectrum(c,peak_range, number_of_eigen_frequencies, waveform, p_o_b)
 
 log_length = math.log(float(n))
-p = st.sidebar.slider('morphing width', 0.1, log_length, step=0.01, value=0.1*log_length, key='p_slider', on_change=sound_to_file)
+p = st.sidebar.slider('Morphing Width', 0.1, log_length, step=0.01, value=0.1*log_length, key='p_slider', on_change=sound_to_file)
 p = math.exp(p)
 
 x_spec = MS.x_spec
 y_spec = MS.y_spec
-#st.write(f'x_spec = {len(x_spec)}')
-#st.write(f'y_spec = {len(y_spec)}')
 Spectrum = morphing.make_spectrum(x_spec, y_spec, spectrum_domain,framerate)
 
-fig2, ax2 = plt.subplots()
-ax2.set_title('Spectrum and Morphing Function', fontstyle='italic')
-x2 = Spectrum.fs
-y2 = Spectrum.hs
 convolution = MS.create_morphing_func(c, wave_surface, p)
-
-ax2.set_xlim([0, hf * 1.2])
-ax2.plot(x2,y2,x2,convolution)
-
-st.pyplot(fig2)
-st.checkbox('random vertices')
 
 # Get the directory where the app.py file is located
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -131,10 +106,10 @@ with open(file_path, "rb") as file:
 # Load the input WAV file
 data, sample_rate = sf.read(file_path)
 
-uploaded_file = st.file_uploader(label="Choose a file",key='file', type=[".wav"])
+uploaded_file = st.file_uploader(label="Choose a File",key='file', type=[".wav"])
 recorded_wave = thinkdsp.read_wave_with_scipy('test.wav')
 recorded_wave.unbias()
-recorded_wave.normalize()
+
 
 if uploaded_file is not None:
     # Create a directory to store the files if it doesn't exist
@@ -153,16 +128,18 @@ if uploaded_file is not None:
             file.write(uploaded_file.getvalue())
     recorded_wave = thinkdsp.read_wave_with_scipy(file_path)
     recorded_wave.unbias()
-    recorded_wave.normalize()
 
-st.markdown("uploaded sound")
+recorded_wave.normalize()
+
+rec_spec = recorded_wave.make_spectrum()
+
+st.markdown("Uploaded Sound")
 st.audio(uploaded_file, format='../audio/wav')
 
-#st.write(type(uploaded_file))
-#st.write(uploaded_file)
 
 
-morphed_wave,len_rec, len_conv, len_morph = MS.write_morphed_sound(c, wave_surface,recorded_wave, p)
+
+morphed_wave = MS.write_morphed_sound(c, wave_surface,recorded_wave, p)
 #st.write(f'len_rec = {len_rec}, len_conv = {len_conv}, len_morph = {len_morph}')
 
 filename = os.path.join(desktop, "morphed_signal.wav")
@@ -173,7 +150,7 @@ audio_file = open(filename, 'rb')
 
 audio_bytes = audio_file.read()
 
-st.markdown("Morphed sound")
+st.markdown("Morphed Sound")
 st.audio(audio_bytes, format='../audio/wav')
 
 x_rand, y_rand = MS.set_random_spectrum(c, number_of_eigen_frequencies)
@@ -181,6 +158,58 @@ Spec_rand = morphing.make_spectrum(x_rand, y_rand, spectrum_domain ,framerate)
 random_wave = MS.write_random_sound_to_file(c, number_of_eigen_frequencies)
 x_rand = Spec_rand.fs
 y_rand = Spec_rand.hs
+
+
+fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 7))
+
+# plot time signal:
+# axs[0, 0].set_title("Signal")
+# axs[0, 0].plot(t, s, color='C0')
+# axs[0, 0].set_xlabel("Time")
+# axs[0, 0].set_ylabel("Amplitude")
+
+## first figure
+x1 = spectrum.fs
+y1 = spectrum.hs
+y1 = np.abs(y1)
+#axs[0, 0].set_title('Spectrum after Fourier-transform', fontstyle='italic')
+#axs[0, 0].set_xlim([0, hf * 1.2])
+#axs[0, 0].plot(x1,y1)
+
+#second figure
+axs[0,0].set_title('Surface Spectrum and Morphing Function', fontstyle='italic')
+x2 = Spectrum.fs
+y2 = Spectrum.hs
+axs[0,0].set_xlim([0, hf * 1.2])
+axs[0,0].plot(x2,y2,x2,convolution)
+
+#second picture
+axs[0,1].set_title('Spectrum of the Recorded Sound', fontstyle='italic')
+x3 = rec_spec.fs
+y3 = np.abs(rec_spec.hs)
+
+axs[0,1].set_xlim([0, hf * 1.2])
+axs[0,1].plot(x3,y3)
+
+#third picture
+axs[1,0].set_title('Recorded Spectrum', fontstyle='italic')
+x3 = rec_spec.fs
+y3 = np.abs(rec_spec.hs)
+max_rec = np.max(y3)
+max_spec = np.max(y2)
+y2 = y2 / max_spec
+y3 = y3 / max_rec
+
+axs[1,0].set_title('Surface Spectrum and Recorded Spectrum', fontstyle='italic')
+axs[1,0].set_xlim([0, hf * 1.2])
+axs[1,0].plot(x2,y2,x3,y3)
+
+axs[1,1].set_title('Discrete White Noise', fontstyle='italic')
+axs[1,1].set_xlim([0, hf * 1.2])
+axs[1,1].plot(x_rand,y_rand)
+
+st.pyplot(fig)
+
 
 filename = os.path.join(desktop, "random_signal.wav")
 
@@ -190,10 +219,5 @@ audio_file = open(filename, 'rb')
 
 audio_bytes = audio_file.read()
 
-st.markdown("random sound")
+st.markdown("Random Sound")
 st.audio(audio_bytes, format='../audio/wav')
-
-fig3, ax = plt.subplots()
-ax.set_xlim([0, hf * 1.2])
-ax.plot(x_rand,y_rand)
-st.pyplot(fig3)

@@ -34,7 +34,7 @@ def make_y_spectrum(x_spec, y_spec, domain):
 
 def make_spectrum(x_spec, y_spec, domain,framerate):
         image = make_y_spectrum(x_spec, y_spec, domain)
-        Spectrum = dsp.Spectrum(image,domain,framerate)
+        Spectrum = dsp.Spectrum(image,domain,framerate, full=True)
         return Spectrum
 
 class Rectangle_Function:
@@ -161,7 +161,6 @@ def test_make_spectrum():
     y_spec = np.array([3.4,8.])
     framerate = 3
     Spectrum = make_spectrum(x_spec,y_spec,domain,framerate)
-    print(Spectrum.hs)
 
 test_make_spectrum()
   #### TEST

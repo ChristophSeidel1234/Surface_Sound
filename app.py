@@ -99,7 +99,7 @@ def update_file():
     uploaded_file = st.session_state.file
 
 cwd = os.getcwd()
-file_path = os.path.join(cwd, "data", "../recorded_sounds/electric_violin.wav")
+file_path = os.path.join(cwd, "recorded_sounds", "electric_violin.wav")
 
 with open(file_path, "rb") as file:
     default_file = file.read()
@@ -108,7 +108,7 @@ with open(file_path, "rb") as file:
 data, sample_rate = sf.read(file_path)
 
 uploaded_file = st.file_uploader(label="Choose a File",key='file', type=[".wav"])
-recorded_wave = thinkdsp.read_wave_with_scipy('../recorded_sounds/electric_violin.wav')
+recorded_wave = thinkdsp.read_wave_with_scipy(file_path)
 recorded_wave.unbias()
 
 

@@ -2,6 +2,7 @@ import numpy as np
 import os
 import math
 import pandas as pd
+import matplotlib.pyplot as plt
 
 PI = math.pi 
 
@@ -84,7 +85,6 @@ test_find_wedge()
 
 def set_wedge_array(points, n):
     vfunc = np.vectorize(find_wedge, signature="(n),() -> ()")
-    #vfunc = np.vectorize(find_wedge)
     result = vfunc(points, n)
     return result
 
@@ -126,7 +126,48 @@ def split_into_pos_neg_pts(P):
         neg_pts = P[neg_idx]
         return pos_pts, neg_pts
 
+def group_points(points, wedge_arr):
+    grouped_array = []
+    unique_values = np.unique(wedge_arr)
+    for value in unique_values:
+        group = points[wedge_arr == value]
+        grouped_array.append(group)
+    return grouped_array
 
+def find_max_norm_points(grouped_array, n):
+    max_norm_points = []
+    wedge_values = []
+    
+    for group in grouped_array:
+        group_points = np.array(group)
+        norms = np.linalg.norm(group_points, axis=1)
+        max_norm_index = np.argmax(norms)
+        max_norm_point = group_points[max_norm_index]
+        max_norm_points.append(max_norm_point)
+        
+        wedge_value = find_wedge(max_norm_point, n)  # Assuming find_wedge is a function that returns the wedge value
+        wedge_values.append(wedge_value)
+    
+    return max_norm_points, wedge_values
+
+def set_cone_func(point, wedges_dict, h, n):
+    wedge = find_wedge(point, n)
+    max_point = wedges_dict.get(wedge)
+    max_dist = np.linalg.norm(max_point)
+    point_dist = np.linalg.norm(point)
+    point_h = h * (max_dist - point_dist) / max_dist 
+    return point_h
+
+def set_sawtooth_func(point, wedges_dict, h, n):
+    wedge = find_wedge(point, n)
+    max_point = wedges_dict.get(wedge)
+    max_dist = np.linalg.norm(max_point)
+    point_dist = np.linalg.norm(point)
+    point_h = h * point_dist / max_dist 
+    return point_h
+
+def set_anulus_func():
+    return 0
 
 
 class Surface:
@@ -189,61 +230,132 @@ class Surface:
         self.neg_idx = neg_idx 
         self.pos_pts = P[pos_idx]
         self.neg_pts = P[neg_idx]
-        self.max_odd_idx = self.find_max_amplitude_idx_odd_overtones()
         self.max_even_idx = self.find_max_amplitude_idx_even_overtones()
-        self.initial_idxs = zip_arrays(self.max_even_idx, self.max_odd_idx)
+        self.max_odd_idx = self.find_max_amplitude_idx_odd_overtones()
+        
+        #self.initial_idxs = np.array(zip_arrays(self.max_even_idx, self.max_odd_idx))
+        self.initial_idxs = np.argmax(np.abs(self.EVs), axis=0)
+
+    def set_initial_idxs(self,random_vertices):
+        initial_idxs = None
+        if random_vertices:
+            length = len(self.P)
+            self.initial_idxs = np.random.choice(length, 100)
+        else:
+            #self.initial_idxs = np.array(zip_arrays(self.max_even_idx, self.max_odd_idx))
+            self. initial_idxs = np.argmax(np.abs(self.EVs), axis=0)
+
+    def find_max_amplitude_idx_overtones(self):
+        return np.argmax(np.abs(self.EVs), axis=0)
+
+         
+
+    def find_max_amplitude_idx_odd_overtones(self):
+        """
+        These are the verices that receive corresponding values in the initial conditions.
+        """
+        neg_idx = self.neg_idx
+        neg_EVs = self.EVs[neg_idx]
+        max_idx = np.argmax(np.abs(neg_EVs), axis=0)
+        odd_idices = np.arange(1,len(max_idx), 2)
+        return max_idx[odd_idices]
 
         
 
-    def find_max_amplitude_idx_odd_overtones(self):
+    def find_max_amplitude_idx_even_overtones(self):
+        """
+        These are the verices that are set to zero in the initial conditions.
+        """
         pos_idx = self.pos_idx
         pos_EVs = self.EVs[pos_idx]
-        #maxi = np.max(np.abs(pos_EVs), axis=0)
         max_idx = np.argmax(np.abs(pos_EVs), axis=0)
-        odd_indices = np.arange(1, len(max_idx), 2)
-        return max_idx[odd_indices]
+        even_idices = np.arange(0, len(max_idx), 2)
+        return max_idx[even_idices]
 
-    def find_max_amplitude_idx_even_overtones(self):
-        neg_idx = self.neg_idx
-        neg_EVs = self.EVs[neg_idx]
-        #maxi = np.max(np.abs(neg_EVs), axis=0)
-        max_idx = np.argmax(np.abs(neg_EVs), axis=0)
-        even_indices = np.arange(0,len(max_idx), 2)
-        return max_idx[even_indices]
+    def find_center_point(self):
+        P_xy = self.pos_pts[:,:2]
+        l = float(len(P_xy))
+        center = np.sum(P_xy, axis=0)/l
+        return center
 
-    def find_center_point(self, pos_idx):
-        P_xy = self.P[:, :2]
-        P_xy = P_xy[pos_idx]
-        norms = np.linalg.norm(P_xy, axis=1)
-        return np.argmin(norms)
+    def find_point_with_max_dist(self):
+        X = self.pos_pts[:,0]
+        return np.max(X)
 
-    def find_point_with_max_dist(self, pos_idx):
-        X = self.P[:,0]
-        return np.argmax(X)
+    def set_initial_function(self, n, peak_range, initial_func='sawtooth'):
+        hight = 1.
+        center = self.find_center_point()
+        #print(f'center = {center}')
+        x_0 = center[0]
+        x_1 = self.find_point_with_max_dist()
+        x = (1 - peak_range) * x_0 + peak_range * x_1
+        center[0] = x 
+        P_xy = self.P[:,:2] - center
+        # This should be a single statement
+        wedge_arr = set_wedge_array(P_xy, n)
+        grouped_array = group_points(P_xy, wedge_arr)
+        max_norm_points, wedge_values = find_max_norm_points(grouped_array, n)
+        wedges_dict = dict(list(zip(wedge_values, max_norm_points)))
 
-    #def find_cone_center(self, )
+        selected_points = self.pos_pts[self.max_even_idx][:,:2] - center
+        if initial_func == 'cone':
+            vfunc = np.vectorize(set_cone_func, otypes=[np.ndarray],signature="(n),(),(),() -> ()")
+        elif initial_func == 'sawtooth':
+            vfunc = np.vectorize(set_sawtooth_func, otypes=[np.ndarray],signature="(n),(),(),() -> ()")
 
 
+        hights = vfunc(selected_points, wedges_dict, hight, n)
+        ### Plot
+        P_xy = self.pos_pts[:,:2]
+        x = selected_points[:,0]
+        y = selected_points[:,1]
+        fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+        ax.stem(x, y, hights)
+        #plt.show()
+        return hights
 
-S = Surface('Minor Ellipsoid')
+#def
+
+S = Surface('Power Ellipsoid')
+S.set_initial_function( 3, 0., initial_func='sawtooth')
 #print(f"max_idx = {max_idx}")
-print(f'odd_idices = {S.max_odd_idx}')
-print(f'even_idices = {S.max_even_idx}')
+#print(f'odd_idices = {S.max_odd_idx}')
+#print(f'even_idices = {S.max_even_idx}')
 zipped = zip_arrays(S.max_even_idx,S.max_odd_idx)
-print(f'zipped = {S.initial_index}')
-print(f'length = {len(S.initial_index)}')
-#print(f"maxi = {maxi}")
-#print(f'maxi.shape = {maxi.shape}')
-a =  np.arange(5)
-a += 1
-b = np.arange(4)
-c = zip(a,b)
-#print(list(c))
+#print(f'zipped = {S.initial_idxs}')
+#print(f'length = {len(S.initial_idxs)}')
+points = S.pos_pts[:,:2]
+#print(f'first point = {points[0]}')
+#print(f'wedge = {find}')
+n = 3
+wedge_arr = set_wedge_array(points, n)
+#print(f'wedge_array = {wedge_arr}')
+#print(F'set_cone = {S.set_cone(3, 0.)}')
 
 
 
-arr_even = [2, 4, 6, 8]
-arr_odd = [1, 3, 5, 7]
-result = zip_arrays(arr_even, arr_odd)
-#print(result)  # Output: [2, 1, 4, 3, 6, 5, 8, 7] 
+
+
+
+
+grouped_array = group_points(points, wedge_arr)
+first_point = grouped_array[0][0]
+print(f'first point = {grouped_array[0][0]}')
+first_wedge = find_wedge(first_point,3)
+print(f'first_wedge = {first_wedge}')
+
+
+#print(f'grouped_array = {grouped_array}')
+
+
+
+max_norm_points, wedge_values = find_max_norm_points(grouped_array,n)
+#print(f'max_norm_points = {max_norm_points}')
+#print(f'wedge_values = {wedge_values}')
+
+for p in max_norm_points:
+    wedge = find_wedge(p, n)
+    #print(f'wedge = {wedge}')
+
+
 

@@ -99,7 +99,7 @@ def update_file():
     uploaded_file = st.session_state.file
 
 cwd = os.getcwd()
-file_path = os.path.join(cwd, "data", "test.wav")
+file_path = os.path.join(cwd, "data", "../recorded_sounds/electric_violin.wav")
 
 with open(file_path, "rb") as file:
     default_file = file.read()

@@ -37,7 +37,7 @@ def sound_to_file():
 surface = st.sidebar.selectbox('Select Surface', ['Power Ellipsoid', 'Major Ellipsoid', 'Minor Ellipsoid'], key='surface_box', on_change=update_surfce)
 number_of_eigen_frequencies = st.sidebar.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef',on_change=sound_to_file)
 waveform = st.sidebar.selectbox('Select Initial Shape', ['Cone', 'Cylinder'], key='wave_box', on_change=sound_to_file)
-initial_value_domain = st.sidebar.slider('Initial Value Domain', 0.1, 1.,step=0.01, value=0.1, key='domain_slider', on_change=sound_to_file)
+initial_value_domain = st.sidebar.slider('Initial Value Domain', 0.1, 1.,step=0.01, value=0.15, key='domain_slider', on_change=sound_to_file)
 p_o_b = st.sidebar.radio('Pick or Hit', ['pick', 'hit'], key='pick_or_beat', on_change=sound_to_file)
 c = st.sidebar.slider('Propagation Velocity / Tuning', 0.0, 1.0,step=0.01, value=0.1, key='c_slider', on_change=sound_to_file)
 
@@ -47,6 +47,7 @@ c = st.sidebar.slider('Propagation Velocity / Tuning', 0.0, 1.0,step=0.01, value
 S = surf.Surface(surface)
 initial_indices = S.initial_idxs
 MS = ms.Make_Sound(S, number_of_eigen_frequencies,p_o_b)
+
 wave_surface = MS.write_sound_to_file(c, initial_value_domain, waveform, p_o_b)
 
 wave_surface.normalize()

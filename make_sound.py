@@ -11,13 +11,6 @@ import scipy
 
 PI = math.pi 
 
-def zip_arrays(arr_even, arr_odd):
-    """
-    zips even and odd array such that the values of the even have even indices and the odd hve odd indices
-    """
-    zipped_array = [val for pair in zip(arr_even, arr_odd) for val in pair]
-    return zipped_array
-
 def is_in_wedge(P,alpha,beta):
     """
     This checks whether a point P lies in the sector of a circle spanned by the angles alpha and beta.
@@ -164,23 +157,15 @@ class Make_Sound:
         return X
 
 
-    def set_sawtooth_func(self, point, wedges_dict, h, n):
-        wedge = find_wedge(point, n)
-        max_point = wedges_dict.get(wedge)
-        max_dist = np.linalg.norm(max_point)
-        point_dist = np.linalg.norm(point)
-        point_h = h * point_dist / max_dist 
-        return point_h
-
     def set_upper_cone_func(self, point, wedges_dict, h, n, l):
         wedge = find_wedge(point, n)
         max_point = wedges_dict.get(wedge)
         max_dist = np.linalg.norm(max_point)
         point_dist = np.linalg.norm(point)
-        scaled_dist = point_dist / max_dist / 2.
+        scaled_dist = point_dist / max_dist
         point_h = 0.0
         if l > scaled_dist:
-            point_h = h * (1. - scaled_dist / l)
+            point_h = h * (1. - scaled_dist / 2. / l)
         return point_h
 
     def set_lower_cone_func(self, point, wedges_dict, h, n, l):
@@ -252,30 +237,30 @@ class Make_Sound:
         
         wedges_dict = self.set_wedges_dict(P_xy, n)
         selected_points = P_xy[S.initial_idxs]
-        
-        if initial_func == 'cone':
-            selected_points = P_xy[S.initial_idxs]
-            z = P_z[S.initial_idxs]
+        hights = np.zeros(len(selected_points))
+        selected_points = P_xy[S.initial_idxs]
+        z = P_z[S.initial_idxs]
+        if initial_func == 'Cone':
             vfunc = np.vectorize(self.set_cone_func, otypes=[np.ndarray],signature="(n),(),(),(),(),() -> ()")
             hights = vfunc(selected_points,z, wedges_dict, hight, n,l)
-        elif initial_func == 'cylinder':
-            #print(f'len(P_xy) = {len(P_xy)} and initial_idxs = {S.initial_idxs}' )
-            selected_points = P_xy[S.initial_idxs]
-            z = P_z[S.initial_idxs]
+        elif initial_func == 'Cylinder':
             vfunc = np.vectorize(self.set_cylinder_func, otypes=[np.ndarray],signature="(n),(),(),(),(),() -> ()")
             hights = vfunc(selected_points,z, wedges_dict, hight, n, l)
             
 
-        graph_domain = np.copy(selected_points)
-        for i in range(len(graph_domain)):
-            if z[i] <= 0:
-                l_p = np.linalg.norm(graph_domain[i])
-                graph_domain[i] = (2.*x_1/l_p - 1.) * graph_domain[i]   
-        ### Plot
-        x = graph_domain[:,0]
-        y = graph_domain[:,1]
-        fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-        ax.stem(x, y, hights)
+        #graph_domain = np.copy(selected_points)
+        #for i in range(len(graph_domain)):
+        #    if z[i] <= 0:
+        #        l_p = np.linalg.norm(graph_domain[i])
+        #        graph_domain[i] = (2.*x_1/l_p - 1.) * graph_domain[i]   
+        ## Plot
+        #x = graph_domain[:,0]
+        #y = graph_domain[:,1]
+        #print(f'x = {x}')
+        #print(f'y = {y}')
+        #print(f'hights = {hights}')
+        #fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+        #ax.stem(x, y, hights)
         #plt.show()
         return hights 
 
@@ -291,7 +276,7 @@ class Make_Sound:
         n = 3
         # load initial conditions
         initial_condition = self.set_initial_function(n, l, initial_func)
-        initial_condition = initial_condition.astype('float64')
+        #initial_condition = initial_condition.astype('float64')
         c = propagation_velocity
         w = evs
         X = self.set_matrix(c)
@@ -335,7 +320,7 @@ class Make_Sound:
             x_spec[i] = c*w[i]
         return x_spec 
 
-    def get_spectrum(self, c, peak_range, number_of_eigenvalues, initial_func, pick_or_beat):
+    def get_spectrum(self, c, initial_value_domain, number_of_eigenvalues, initial_func, pick_or_beat):
         S = self.S
         EVs = S.EVs 
         evs = S.evs
@@ -345,8 +330,7 @@ class Make_Sound:
         x_spec = np.zeros(number_of_eigenvalues)
         y_spec = np.zeros(number_of_eigenvalues)
         n = 3
-        a = self.determine_coefficients(peak_range, c, i_f, p_o_b)
-
+        a = self.determine_coefficients(initial_value_domain, c, i_f, p_o_b)
         #The next rows are simply:
         #for j in range(S.P.shape[0]):
         #    y_spec_single = self.get_y_spec_single_vertex(j, a, c, number_of_eigenvalues) 
@@ -369,13 +353,14 @@ class Make_Sound:
         #y_spec = sum_up_multiple_eigenvalues(y_spec)
         self.x_spec = x_new
         self.y_spec = y_new
+    
 
         
 
-    def write_sound_to_file(self, c, peak_range, initial_func, pick_or_beat):
+    def write_sound_to_file(self, c, initial_value_domain, initial_func, pick_or_beat):
         i_f = initial_func
         p_o_b = pick_or_beat
-        self.get_spectrum(c,peak_range,self.number_of_overtones,initial_func=i_f, pick_or_beat=p_o_b)
+        self.get_spectrum(c,initial_value_domain,self.number_of_overtones,initial_func=i_f, pick_or_beat=p_o_b)
         x_spec = self.x_spec
         y_spec = self.y_spec
         sig = 0
@@ -400,7 +385,6 @@ class Make_Sound:
 
         open(filename, 'w').close()
         wave.write(filename)
-        #print('new signal written')
         return wave
 
     
@@ -469,8 +453,6 @@ class Make_Sound:
         
         sectrum = wave.make_spectrum(full=True)
         rec_spectrum = recorded_wave.make_spectrum(full=True)
-        #spectrum_domain = rec_spectrum.fs
-        #spectrum_hs = rec_spectrum.hs
         len_rec = rec_spectrum.hs[0]
         convolution = self.create_morphing_func(c, wave, p)
         len_conv = convolution[0]
@@ -478,8 +460,6 @@ class Make_Sound:
         len_morph = morphed_spectrum_hs[0]
         ys = np.fft.ifft(morphed_spectrum_hs)
         morphed_spectrum = thinkdsp.Spectrum(morphed_spectrum_hs, rec_spectrum.fs, wave.framerate*2)
-        #morphed_spectrum = thinkdsp.Spectrum(rec_spectrum.hs, rec_spectrum.fs, wave.framerate*2)
-        #morphed_spectrum = np.abs(morphed_spectrum)
         morphed_wave = morphed_spectrum.make_wave()
         morphed_wave.normalize()
         #morphed_wave = rec_spectrum.make_wave()
@@ -497,7 +477,6 @@ class Make_Sound:
 
         open(filename, 'w').close()
         morphed_wave.write(filename)
-        #print('new signal written')
         return morphed_wave
 
     def set_random_spectrum(self, c, number_of_eigenvalues):
@@ -530,28 +509,17 @@ class Make_Sound:
 
         open(filename, 'w').close()
         wave.write(filename)
-        #print('new signal written')
         return wave
 
 
-S = sf.Surface('Major Ellipsoid')
+S = sf.Surface('Power Ellipsoid')
 P = S.P 
 EVs = S.EVs
 MS = Make_Sound(S,20,'pick')
-X = MS.set_matrix(0.2)
-print(f'matrix shape = {X.shape}')
-from numpy.linalg import matrix_rank
-rank = matrix_rank(X)
-print(f'rank = {rank}')
-n = X.shape[0]
-if rank < n:
-    print("The matrix is singular.")
-else:
-    print("The matrix is not singular.")
-initial_func = MS.set_initial_function(3, 0.85, initial_func='cylinder')
-print(initial_func)
+#X = MS.set_matrix(0.2)
+
+#initial_func = MS.set_initial_function(3, 0.9, initial_func='cone')
 c = 0.2
 l = 0.1
-a = MS.determine_coefficients(l, c, initial_func='cylinder', pick_or_beat='pick')
-#print(f'a = {a}')
-#MS.get_spectrum(c,peak_range, 100, initial_func='cone', pick_or_beat='pick')
+#a = MS.determine_coefficients(l, c, initial_func='cylinder', pick_or_beat='pick')
+MS.write_sound_to_file( c, l, initial_func='cylinder', pick_or_beat='pick')

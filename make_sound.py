@@ -512,14 +512,14 @@ class Make_Sound:
         return wave
 
 
-S = sf.Surface('Power Ellipsoid')
-P = S.P 
-EVs = S.EVs
-MS = Make_Sound(S,20,'pick')
+#S = sf.Surface('Power Ellipsoid')
+#P = S.P 
+#EVs = S.EVs
+#MS = Make_Sound(S,20,'pick')
 #X = MS.set_matrix(0.2)
 
 #initial_func = MS.set_initial_function(3, 0.9, initial_func='cone')
-c = 0.2
-l = 0.1
+#c = 0.2
+#l = 0.1
 #a = MS.determine_coefficients(l, c, initial_func='cylinder', pick_or_beat='pick')
-MS.write_sound_to_file( c, l, initial_func='cylinder', pick_or_beat='pick')
+#MS.write_sound_to_file( c, l, initial_func='Cylinder', pick_or_beat='pick')

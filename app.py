@@ -108,7 +108,7 @@ with open(file_path, "rb") as file:
 data, sample_rate = sf.read(file_path)
 
 uploaded_file = st.file_uploader(label="Choose a File",key='file', type=[".wav"])
-recorded_wave = thinkdsp.read_wave_with_scipy('test.wav')
+recorded_wave = thinkdsp.read_wave_with_scipy('../recorded_sounds/electric_violin.wav')
 recorded_wave.unbias()
 
 

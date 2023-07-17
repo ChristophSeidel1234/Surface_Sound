@@ -329,29 +329,13 @@ points = S.pos_pts[:,:2]
 #print(f'wedge = {find}')
 n = 3
 wedge_arr = set_wedge_array(points, n)
-#print(f'wedge_array = {wedge_arr}')
-#print(F'set_cone = {S.set_cone(3, 0.)}')
-
-
-
-
-
-
 
 grouped_array = group_points(points, wedge_arr)
 first_point = grouped_array[0][0]
-print(f'first point = {grouped_array[0][0]}')
+#print(f'first point = {grouped_array[0][0]}')
 first_wedge = find_wedge(first_point,3)
-print(f'first_wedge = {first_wedge}')
-
-
-#print(f'grouped_array = {grouped_array}')
-
-
 
 max_norm_points, wedge_values = find_max_norm_points(grouped_array,n)
-#print(f'max_norm_points = {max_norm_points}')
-#print(f'wedge_values = {wedge_values}')
 
 for p in max_norm_points:
     wedge = find_wedge(p, n)

@@ -24,6 +24,7 @@ st.sidebar.markdown("Choose options here:")
 
 def update_surfce():
     surface = st.session_state.surface_box
+    noise = st.session_state.noise_box
 
 def sound_to_file():
     """ add a listener to every option and write a sound file created by the latest properties """
@@ -38,7 +39,7 @@ surface = st.sidebar.selectbox('Select Surface', ['Power Ellipsoid', 'Major Elli
 number_of_eigen_frequencies = st.sidebar.slider('Number of Overtones', 0, 100, step=1, value=20, key='noef',on_change=sound_to_file)
 waveform = st.sidebar.selectbox('Select Initial Shape', ['Cone', 'Cylinder'], key='wave_box', on_change=sound_to_file)
 initial_value_domain = st.sidebar.slider('Initial Value Domain', 0.1, 1.,step=0.01, value=0.25, key='domain_slider', on_change=sound_to_file)
-p_o_b = st.sidebar.radio('Pick or Hit', ['pick', 'hit'], key='pick_or_beat', on_change=sound_to_file)
+p_o_b = st.sidebar.radio('Pick or Hit', ['hit', 'pick'], key='pick_or_beat', on_change=sound_to_file)
 c = st.sidebar.slider('Propagation Velocity / Tuning', 0.0, 1.0,step=0.01, value=0.1, key='c_slider', on_change=sound_to_file)
 
 
@@ -49,6 +50,7 @@ initial_indices = S.initial_idxs
 MS = ms.Make_Sound(S, number_of_eigen_frequencies,p_o_b)
 
 wave_surface = MS.write_sound_to_file(c, initial_value_domain, waveform, p_o_b)
+wave = wave_surface.copy()
 
 wave_surface.normalize()
 
@@ -80,11 +82,30 @@ log_length = math.log(float(n))
 p = st.sidebar.slider('Morphing Width', 0.1, log_length, step=0.01, value=0.1*log_length, key='p_slider', on_change=sound_to_file)
 p = math.exp(p)
 
+noise = st.sidebar.selectbox('Select Noise', ['Pink Noise', 'White Noise', 'Brownian Noise'], key='noise_box', on_change=update_surfce)
+
 x_spec = MS.x_spec
 y_spec = MS.y_spec
 Spectrum = morphing.make_spectrum(x_spec, y_spec, spectrum_domain,framerate)
 
 convolution = MS.create_morphing_func(c, wave_surface, p)
+wave_envelope = MS.write_envelope_sound(c, wave_surface, p,noise)
+
+# Get the current user's home directory
+home = os.path.expanduser("~")
+# Set the path to the desktop
+desktop = os.path.join(home, "Desktop")
+# Set the full path to the file
+filename = os.path.join(desktop, "envelope_signal.wav")
+
+if not os.path.exists(filename):
+    os.mknod(filename)
+audio_file = open(filename, 'rb')
+audio_bytes = audio_file.read()
+
+st.markdown("The Sound of the Surface surrounded by the Morphing Function which is funished with a Noise")
+st.audio(audio_bytes, format='../audio/wav')
+
 
 # Get the directory where the app.py file is located
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -141,7 +162,6 @@ st.audio(uploaded_file, format='../audio/wav')
 
 
 morphed_wave = MS.write_morphed_sound(c, wave_surface,recorded_wave, p)
-#st.write(f'len_rec = {len_rec}, len_conv = {len_conv}, len_morph = {len_morph}')
 
 filename = os.path.join(desktop, "morphed_signal.wav")
 
@@ -161,39 +181,29 @@ x_rand = Spec_rand.fs
 y_rand = Spec_rand.hs
 
 
-fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 7))
-
-# plot time signal:
-# axs[0, 0].set_title("Signal")
-# axs[0, 0].plot(t, s, color='C0')
-# axs[0, 0].set_xlabel("Time")
-# axs[0, 0].set_ylabel("Amplitude")
+fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(16, 7))
 
 ## first figure
 x1 = spectrum.fs
 y1 = spectrum.hs
 y1 = np.abs(y1)
-#axs[0, 0].set_title('Spectrum after Fourier-transform', fontstyle='italic')
-#axs[0, 0].set_xlim([0, hf * 1.2])
-#axs[0, 0].plot(x1,y1)
 
-#second figure
-axs[0,0].set_title('Surface Spectrum and Morphing Function', fontstyle='italic')
+axs[0].set_title('Surface Spectrum and Morphing Function', fontstyle='italic')
 x2 = Spectrum.fs
 y2 = Spectrum.hs
-axs[0,0].set_xlim([0, hf * 1.2])
-axs[0,0].plot(x2,y2,x2,convolution)
+axs[0].set_xlim([0, hf * 1.2])
+axs[0].plot(x2,y2,x2,convolution)
 
-#second picture
-axs[0,1].set_title('Spectrum of the Recorded Sound', fontstyle='italic')
-x3 = rec_spec.fs
-y3 = np.abs(rec_spec.hs)
+#second figure
+#axs[0,1].set_title('Spectrum of the Recorded Sound', fontstyle='italic')
+#x3 = rec_spec.fs
+#y3 = np.abs(rec_spec.hs)
 
-axs[0,1].set_xlim([0, hf * 1.2])
-axs[0,1].plot(x3,y3)
+#axs[0,1].set_xlim([0, hf * 1.2])
+#axs[0,1].plot(x3,y3)
 
-#third picture
-axs[1,0].set_title('Recorded Spectrum', fontstyle='italic')
+#third figure
+#axs[1].set_title('Recorded Spectrum', fontstyle='italic')
 x3 = rec_spec.fs
 y3 = np.abs(rec_spec.hs)
 max_rec = np.max(y3)
@@ -201,24 +211,26 @@ max_spec = np.max(y2)
 y2 = y2 / max_spec
 y3 = y3 / max_rec
 
-axs[1,0].set_title('Surface Spectrum and Recorded Spectrum', fontstyle='italic')
-axs[1,0].set_xlim([0, hf * 1.2])
-axs[1,0].plot(x2,y2,x3,y3)
+axs[1].set_title('Surface Spectrum and Recorded Spectrum', fontstyle='italic')
+axs[1].set_xlim([0, hf * 1.2])
+axs[1].plot(x2,y2,x3,y3)
 
-axs[1,1].set_title('Discrete White Noise', fontstyle='italic')
-axs[1,1].set_xlim([0, hf * 1.2])
-axs[1,1].plot(x_rand,y_rand)
+
+# fourth figure
+#axs[1,1].set_title('Discrete White Noise', fontstyle='italic')
+#axs[1,1].set_xlim([0, hf * 1.2])
+#axs[1,1].plot(x_rand,y_rand)
 
 st.pyplot(fig)
 
 
-filename = os.path.join(desktop, "random_signal.wav")
+#filename = os.path.join(desktop, "random_signal.wav")
 
-if not os.path.exists(filename):
-    os.mknod(filename)
-audio_file = open(filename, 'rb')
+#if not os.path.exists(filename):
+#    os.mknod(filename)
+#audio_file = open(filename, 'rb')
 
-audio_bytes = audio_file.read()
+#audio_bytes = audio_file.read()
 
-st.markdown("Random Sound")
-st.audio(audio_bytes, format='../audio/wav')
+#st.markdown("Random Sound")
+#st.audio(audio_bytes, format='../audio/wav')

@@ -17,8 +17,10 @@ This app is a software synthesizer that makes virtual surfaces sound. To put it 
     `pip install -r requirements.txt`
     * Once you are finished, just use the `deactivate` command to exit the virtual environment.
 
-* run the app\
-`streamlit run app.py`
+* Run the app\
+`streamlit run app.py`\
+At this point you will be asked for your e-mail address in order to register with streamlit.
+
 
 ## Instructions
 We go step by step from top to bottom through the app.
@@ -55,8 +57,13 @@ This means how fast is the speed of the wave on the surface. This is also like t
    Here you can specify how much the recorded sound should be morphed onto the surface. The construction is as follows: build a rectangular function of width 2 * `Morphing Width` around the discrete spectrum of the surface, smooth this with a suitable [mollifier](https://en.wikipedia.org/wiki/Mollifier) via the [convolution theorem](https://en.wikipedia.org/wiki/Convolution_theorem), multiply this with the spectrum of the recorded sound and send it back with the inverse [Fourier transfom](https://en.wikipedia.org/wiki/Fourier_transform).\
    <img src="images/morphing_function.jpg" width="60%" alt="morphing_function">\
    This can also be seen as a very special filter that opens many small gates that nestle around the surface spectrum.
+* **Select Noise**\
+These are the different types of noise that are glued onto the function that is placed around the surface spectrum.
+
 * **The pure Surface Sound**\
-It is simply the sound of the virtual surface.
+It is simply the pure sound of the virtual surface.
+* **The Sound of the Surface surrounded by the Morphing Function which is equipped with a Noise**\
+Here we nestle a smoothed function around the spectrum, which is equipped with a noise that can be selected in the `Select Noise` box.
 * **Choose a File**\
 Please use only wav files with framerate=44100. You can find some examples in the folder recorded_sounds.
 * **Uploaded Sound**\
@@ -64,12 +71,8 @@ The uploaded sound
 * **Graphics**
    * **Surface Spectrum and Morphing Function**\
      Shows the spectra of the surface and the morphing function you have choosen.
-   * **Spectrum of the Recorded Sound**\
-     Shows the spectrum of the recorded sound.
    * **Surface Spectrum and Recorded Spectrum**\
      This is the graphic you should work with. Here you can synchronise the fundamental tone of both spectra via the `Propagation Velocity / Tuning` slider.
-   * **Discrete White Noise**
-     That's just for comparison. You can hear the corresponding sound below. The discrete white noise changes randomly each time a slider is operated depending on the operating system.
-
+  
 Finally, we would like to mention that each change of the above options writes or changes files named `new_signal.wav` and `morphed_signal.wav` on your desktop with respect to the selected properties.
 

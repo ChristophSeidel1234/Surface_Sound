@@ -103,7 +103,7 @@ if not os.path.exists(filename):
 audio_file = open(filename, 'rb')
 audio_bytes = audio_file.read()
 
-st.markdown("The Sound of the Surface surrounded by the Morphing Function which is funished with a Noise")
+st.markdown("The Sound of the Surface surrounded by the Morphing Function which is equipped with a Noise")
 st.audio(audio_bytes, format='../audio/wav')
 
 

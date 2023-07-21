@@ -74,5 +74,5 @@ The uploaded sound
    * **Surface Spectrum and Recorded Spectrum**\
      This is the graphic you should work with. Here you can synchronise the fundamental tone of both spectra via the `Propagation Velocity / Tuning` slider.
   
-Finally, we would like to mention that each change of the above options writes or changes files named `new_signal.wav` and `morphed_signal.wav` on your desktop with respect to the selected properties.
+Finally, we would like to mention that each change of the above options writes or changes files named `new_signal.wav`, `envelope_signal.wav` and `morphed_signal.wav` on your desktop with respect to the selected properties.
 

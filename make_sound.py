@@ -479,6 +479,51 @@ class Make_Sound:
         morphed_wave.write(filename)
         return morphed_wave
 
+    def write_envelope_sound(self, c, wave, p,noise):
+        spectrum = wave.make_spectrum(full=True)
+        envelope = self.create_morphing_func(c, wave, p)
+        white_signal = thinkdsp.PinkNoise(beta=2)
+        if noise == 'White Noise':
+            white_signal = thinkdsp.UncorrelatedUniformNoise()
+        elif noise == 'Brownian Noise':
+            white_signal = thinkdsp.BrownianNoise()
+        elif noise == 'Pink Noise':
+            white_signal = thinkdsp.PinkNoise(beta=2)
+        
+        white_wave = white_signal.make_wave(duration=11.5, start=0, framerate=44100)
+        l1 = wave.__len__()
+        l2 = white_wave.__len__()
+        length = l1
+        if l1 > l2:
+            length = l2
+            wave.truncate(length)
+        else:
+            white_wave.truncate(length)
+
+        white_spectrum = white_wave.make_spectrum(full=True)
+
+        envelope = envelope * white_spectrum.hs
+        len_conv = envelope[0]
+        envelope_spectrum = thinkdsp.Spectrum(envelope, spectrum.fs, wave.framerate,full=True)
+        envelope_wave = envelope_spectrum.make_wave()
+        envelope_wave.normalize()
+        #morphed_wave = rec_spectrum.make_wave()
+
+        audio = envelope_wave.make_audio()
+
+        # Get the current user's home directory
+        home = os.path.expanduser("~")
+
+        # Set the path to the desktop
+        desktop = os.path.join(home, "Desktop")
+
+        # Set the full path to the file
+        filename = os.path.join(desktop, "envelope_signal.wav")
+
+        open(filename, 'w').close()
+        envelope_wave.write(filename)
+        return envelope_wave
+
     def set_random_spectrum(self, c, number_of_eigenvalues):
         """
         This generates a discrete random spactrum

@@ -66,7 +66,7 @@ It is simply the pure sound of the virtual surface.
 * **The Sound of the Surface surrounded by the Morphing Function which is equipped with a Noise**\
 Here we nestle a smoothed function around the spectrum, which is equipped with a noise that can be selected in the `Select Noise` box.
 * **Choose a File**\
-Please use only wav files with framerate=44100. You can find some examples in the folder recorded_sounds.
+Please use only wav files. You can find some examples in the folder recorded_sounds.
 * **Uploaded Sound**\
 The uploaded sound
 * **Graphics**

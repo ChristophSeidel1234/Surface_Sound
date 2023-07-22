@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import thinkdsp
 import soundfile as sf
 import scipy.signal as signal
+import scipy.io.wavfile as wav
 from scipy.io import wavfile
 import morphing
 import math
@@ -82,7 +83,7 @@ log_length = math.log(float(n))
 p = st.sidebar.slider('Morphing Width', 0.1, log_length, step=0.01, value=0.1*log_length, key='p_slider', on_change=sound_to_file)
 p = math.exp(p)
 
-noise = st.sidebar.selectbox('Select Noise', ['Pink Noise', 'White Noise', 'Brownian Noise'], key='noise_box', on_change=update_surfce)
+noise = st.sidebar.selectbox('Select Noise', ['Pink Noise', 'White Noise', 'Brownian Noise', 'No Noise'], key='noise_box', on_change=update_surfce)
 
 x_spec = MS.x_spec
 y_spec = MS.y_spec
@@ -129,7 +130,26 @@ with open(file_path, "rb") as file:
 data, sample_rate = sf.read(file_path)
 
 uploaded_file = st.file_uploader(label="Choose a File",key='file', type=[".wav"])
-recorded_wave = thinkdsp.read_wave_with_scipy(file_path)
+
+def read_and_resample_wav_file(file_path):
+    desired_sample_rate = 44100
+
+    # Read the WAV file to get the audio data and current sample rate
+    current_sample_rate, audio_data = wav.read(file_path)
+    # Calculate the ratio of the desired sample rate to the current sample rate
+    sample_rate_ratio = desired_sample_rate / current_sample_rate
+
+    # Resample the audio data to the desired sample rate
+    resampled_audio_data = signal.resample(audio_data, int(len(audio_data) * sample_rate_ratio))
+    # take the left channel
+    resampled_audio_data = resampled_audio_data[:, 0]
+    time_array = np.arange(len(resampled_audio_data)) / desired_sample_rate
+    wave = thinkdsp.Wave(resampled_audio_data,time_array,desired_sample_rate)
+    return wave
+
+
+recorded_wave = read_and_resample_wav_file(file_path)
+#recorded_wave = thinkdsp.read_wave_with_scipy(file_path)
 recorded_wave.unbias()
 
 
@@ -148,10 +168,13 @@ if uploaded_file is not None:
         # Write the file to the specified path
         with open(file_path, "wb") as file:
             file.write(uploaded_file.getvalue())
-    recorded_wave = thinkdsp.read_wave_with_scipy(file_path)
+    recorded_wave = read_and_resample_wav_file(file_path)
+    #recorded_wave = thinkdsp.read_wave_with_scipy(file_path)
     recorded_wave.unbias()
 
 recorded_wave.normalize()
+
+
 
 rec_spec = recorded_wave.make_spectrum()
 
@@ -181,7 +204,7 @@ x_rand = Spec_rand.fs
 y_rand = Spec_rand.hs
 
 
-fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(16, 7))
+fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(20, 7))
 
 ## first figure
 x1 = spectrum.fs
@@ -193,6 +216,7 @@ x2 = Spectrum.fs
 y2 = Spectrum.hs
 axs[0].set_xlim([0, hf * 1.2])
 axs[0].plot(x2,y2,x2,convolution)
+
 
 #second figure
 #axs[0,1].set_title('Spectrum of the Recorded Sound', fontstyle='italic')
@@ -214,6 +238,7 @@ y3 = y3 / max_rec
 axs[1].set_title('Surface Spectrum and Recorded Spectrum', fontstyle='italic')
 axs[1].set_xlim([0, hf * 1.2])
 axs[1].plot(x2,y2,x3,y3)
+axs[1].plot(x3,y3, color='red')
 
 
 # fourth figure

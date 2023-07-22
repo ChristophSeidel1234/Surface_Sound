@@ -59,7 +59,7 @@ This means how fast is the speed of the wave on the surface. This is also like t
    This can also be seen as a very special filter that opens many small gates that nestle around the surface spectrum.
 * **Select Noise**\
 These are the different types of noise that are glued onto the function that is placed around the surface spectrum. You can listen to that when you play
-`The Sound of the Surface surrounded by the Morphing Function which is equipped with a Noise`. If you select 'No Noise' it becomes clear why it makes sense to multiply an additional noise on the spectrum.
+`The Sound of the Surface surrounded by the Morphing Function which is equipped with a Noise`. If you select `No Noise` it becomes clear why it makes sense to multiply an additional noise on the spectrum.
 
 * **The pure Surface Sound**\
 It is simply the pure sound of the virtual surface.

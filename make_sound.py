@@ -7,7 +7,8 @@ from thinkdsp import CosSignal, SinSignal, normalize, decorate
 import thinkdsp
 import morphing
 from collections import Counter
-import scipy
+from scipy import signal
+
 
 PI = math.pi 
 
@@ -489,20 +490,20 @@ class Make_Sound:
             white_signal = thinkdsp.BrownianNoise()
         elif noise == 'Pink Noise':
             white_signal = thinkdsp.PinkNoise(beta=2)
-        
-        white_wave = white_signal.make_wave(duration=11.5, start=0, framerate=44100)
-        l1 = wave.__len__()
-        l2 = white_wave.__len__()
-        length = l1
-        if l1 > l2:
-            length = l2
-            wave.truncate(length)
-        else:
-            white_wave.truncate(length)
+            
+        if noise != 'No Noise':
+            white_wave = white_signal.make_wave(duration=11.5, start=0, framerate=44100)
+            l1 = wave.__len__()
+            l2 = white_wave.__len__()
+            length = l1
+            if l1 > l2:
+                length = l2
+                wave.truncate(length)
+            else:
+                white_wave.truncate(length)
+            white_spectrum = white_wave.make_spectrum(full=True)       
+            envelope = envelope * white_spectrum.hs
 
-        white_spectrum = white_wave.make_spectrum(full=True)
-
-        envelope = envelope * white_spectrum.hs
         len_conv = envelope[0]
         envelope_spectrum = thinkdsp.Spectrum(envelope, spectrum.fs, wave.framerate,full=True)
         envelope_wave = envelope_spectrum.make_wave()
